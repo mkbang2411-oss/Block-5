@@ -1,27 +1,42 @@
-<%- include('partials/head', { title: 'Phố Ba Cô Gái', la: true, am: 'pho' }) %>
+<%- include('partials/head', { title: 'Cái Quán Ăn', am: 'pho' }) %>
 <main class="man canh">
-  <div class="may m1"></div><div class="may m2"></div>
-  <div class="xa xa1"></div><div class="xa xa2"></div>
-  <div id="pho" class="pho">
-    <% pho.forEach(n => { const tang = Math.max(2, Math.round((n.h - 170) / 100)); %>
-    <article class="nha<%= n.ba ? ' nha-ba' : '' %>" style="--w:<%= n.w %>px;--h:<%= n.h %>px;--tuong:<%= n.tuong %>;--mai:<%= n.mai %>">
-      <% if (n.cay) { %><i class="cay" style="left:<%= n.cayX %>%"></i><% } %>
-      <div class="mai"></div>
-      <div class="tuong">
-        <% for (let i = 0; i < tang - 1; i++) { %><div class="tang"><% for (let j = 0; j < (n.w > 340 ? 3 : 2); j++) { %><i class="cua-so"></i><% } %></div><% } %>
-        <div class="tang tret">
-          <span class="bang"><%= n.ba ? 'Ba Cô Gái' : n.ten %></span>
-          <% if (n.ba) { %><small class="phu">Món ngon nhà làm</small><i class="den"></i><i class="den d2"></i><% } %>
-          <i class="cua"></i>
-        </div>
-      </div>
-      <% if (n.xe) { %><div class="xe" style="--xl:<%= n.xeX %>%"><i class="du"></i><i class="hx"></i></div><% } %>
-    </article>
-    <% }) %>
+  <%# ---- bầu trời tự sinh: gradient + mây + dãy cây mờ phía xa ---- %>
+  <div class="may m1"></div><div class="may m2"></div><div class="may m3"></div>
+  <div class="xa xa1"></div>
+
+  <%# ---- mặt đất tự sinh: vỉa hè (lề) -> bó vỉa -> lòng đường ---- %>
+  <div class="dat" aria-hidden="true">
+    <div class="duong"></div>
+    <div class="le-duong"></div>
+    <div class="via-he"></div>
   </div>
-  <div class="via-he"></div>
-  <div class="truoc"></div>
-  <p class="goi-y">Kéo để dạo phố</p>
+
+  <%# ---- phố: 2 dãy nhà bên + nhà hàng ở cuối phố ---- %>
+  <div id="pho" class="pho">
+    <% const veDay = function (d) { %>
+    <div class="day <%= d.cls %>">
+      <img class="nha-day" src="/img/pho/nha-ben.webp" width="2200" height="913" alt="" draggable="false" decoding="async">
+      <% d.props.forEach(function (p) { %>
+      <span class="vat <%= p.loai === 'cay' ? 'cay' + (p.dam ? ' cay-dam' : '') : 'xe ' + p.loai + (p.gan ? ' gan-le' : '') %>" style="--x:<%= p.x %>%;--lat:<%= p.lat %>"><i class="bong"></i><img src="/img/pho/<%= p.anh %>.webp" alt="" draggable="false" decoding="async"></span>
+      <% }) %>
+    </div>
+    <% }; %>
+    <% pho.days.slice(0, 3).forEach(veDay) %>
+    <button type="button" class="nha-hang" aria-label="Cái Quán Ăn - bấm để vào quán">
+      <img src="/img/pho/nha-hang.webp" width="1100" height="1286" alt="Cái Quán Ăn" draggable="false" decoding="async">
+    </button>
+    <% pho.days.slice(3).forEach(veDay) %>
+  </div>
+
+  <div class="nang" aria-hidden="true">
+    <i class="tia"></i><i class="tia nho"></i>
+    <% for (let k = 0; k < 9; k++) { %><i class="lap" style="--x:<%= 3 + Math.floor(Math.random() * 94) %>%;--b:<%= (9.5 + Math.random() * 16).toFixed(1) %>;--s:<%= 9 + Math.floor(Math.random() * 9) %>px;--t:<%= (2.6 + Math.random() * 2.2).toFixed(1) %>s;--dl:-<%= (Math.random() * 5).toFixed(1) %>s"></i><% } %>
+  </div>
+
+  <p class="goi-y" id="goi-y">
+    <svg viewBox="0 0 64 28" width="44" height="20" aria-hidden="true"><path d="M3 14h50" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="M40 3l19 11-19 11" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <span>Nhà hàng hướng này</span>
+  </p>
 </main>
 
 <%# Form thật: POST /login (role=user|admin). JS chỉ thêm hiệu ứng chuyển cảnh trước khi gửi form %>

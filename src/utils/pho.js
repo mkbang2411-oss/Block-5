@@ -1,24 +1,117 @@
-// Sinh ngẫu nhiên con phố ở trang chủ (~10 căn); căn "Ba Cô Gái" nằm ở vị trí 3-6
-const rnd = (a, b) => Math.floor(a + Math.random() * (b - a + 1));
-const pick = (a) => a[rnd(0, a.length - 1)];
-const TUONG = ['#e9b44c', '#d9774a', '#8fbfc2', '#e6c9a0', '#b9a0c9', '#a7c78a', '#e08a7b'];
-const MAI = ['#8a4b3a', '#5f7d7a', '#a65a3d', '#6d5a7a'];
-const TEN = ['Tạp hóa', 'Cà phê', 'Tiệm may', 'Sách cũ', 'Hoa tươi', 'Sửa xe', 'Nón lá', 'Giặt là', 'Bánh mì'];
+// Sinh ngẫu nhiên con phố ở trang chủ:
+//   [dãy cắt] [dãy nhà 1] [dãy nhà 2] [nhà hàng ở cuối phố] [dãy cắt]
+// Cây thưa và cách xa nhau; xe hàng rong gần nhau hơn; nhà hàng KHÔNG có xe/cây chắn phía trước.
+// Mọi khoảng cách tính theo đơn vị --u của CSS (xem các hằng số bố cục bên dưới, phải khớp style.css).
+const rnd = (a, b) => a + Math.random() * (b - a);
+
+const SO_XE = 2; // số xe hàng rong trên cả phố (đổi thành 1 nếu muốn đúng 1 xe)
+const XE_CACH = [34, 60]; // khoảng cách giữa 2 xe liên tiếp (tâm - tâm)
+const CAY_CACH = 115; // khoảng cách TỐI THIỂU giữa tâm 2 cây (~ 1 dãy phố = 115.7u)
+
+// ---- bố cục (khớp style.css): chiều cao dãy nhà 48u, nhà hàng 58u ----
+const DAY_RONG = (48 * 2200) / 913; // ~115.7u
+const NH_RONG = (58 * 1100) / 1286; // ~49.6u
+const CUT_T = 62; // dãy cắt ở đầu phố (chỉ thấy phần phải)
+const CUT_P = 95; // dãy cắt sau nhà hàng (chỉ thấy phần trái)
+const CHONG = 3.6; // 2 dãy chồng lên nhau
+const S_T = 0;
+const S_1 = S_T + CUT_T - CHONG;
+const S_2 = S_1 + DAY_RONG - CHONG;
+const S_P = S_2 + DAY_RONG - CHONG - 1.6 + NH_RONG - 2.4;
+
+const XE = {
+  xe1: { w: 11.6 }, // xe dù xanh vàng
+  xe2: { w: 15.5 }, // xe bánh mì
+  xe3: { w: 11.6 }, // xe nước mía
+};
+const CAY_W = 37;
+
+const mk = (cls, rong, start) => ({ cls, rong, start, props: [] });
+const pct = (u, d) => (u / d.rong) * 100;
 
 function taoPho() {
-  const ba = rnd(3, 6);
-  return Array.from({ length: 10 }, (_, i) => ({
-    ba: i === ba,
-    w: i === ba ? rnd(340, 400) : rnd(250, 430),
-    h: i === ba ? rnd(350, 420) : rnd(300, 470),
-    tuong: pick(TUONG),
-    mai: pick(MAI),
-    ten: pick(TEN),
-    cay: Math.random() < 0.4,
-    cayX: rnd(0, 55),
-    xe: i !== ba && Math.random() < 0.45,
-    xeX: rnd(5, 55),
-  }));
+  const cutT = mk("cut-t", CUT_T, S_T);
+  const d1 = mk("", DAY_RONG, S_1);
+  const d2 = mk("", DAY_RONG, S_2);
+  const cutP = mk("cut-p", CUT_P, S_P);
+  const trees = []; // tâm cây (toạ độ toàn phố)
+
+  const them = (day, loai, w, x, extra = {}) =>
+    day.props.push({
+      loai,
+      x: +x.toFixed(1),
+      anh: loai,
+      lat: Math.random() < 0.5 ? -1 : 1,
+      ...extra,
+    });
+
+  // ---- cây: thưa, cách nhau xa ----
+  const cayVao = (day, xMin, xMax, dam = false) => {
+    for (let i = 0; i < 200; i++) {
+      const x = rnd(xMin, xMax - pct(CAY_W, day));
+      const g = day.start + ((x + pct(CAY_W, day) / 2) / 100) * day.rong;
+      if (trees.every((t) => Math.abs(t - g) >= CAY_CACH)) {
+        trees.push(g);
+        them(day, "cay", CAY_W, x, dam ? { dam: true } : {});
+        return;
+      }
+    }
+  };
+  // cây NGAY BÊN PHẢI nhà hàng (luôn có, đặt trước), màu đậm hơn (class cay-dam)
+  cayVao(cutP, 2, 47, true);
+  // các cây còn lại: cách nhau ~ 1 dãy phố, nên chỉ vừa 1-2 cây trên phần phố còn lại
+  cayVao(d2, 0, 68);
+  cayVao(d1, 0, 94);
+  cayVao(cutT, 4, 96); // thường không vừa chỗ -> bỏ qua
+
+  // ---- xe hàng rong: kiểu không trùng, đặt gần nhau ----
+  const kieu = Object.keys(XE).sort(() => Math.random() - 0.5);
+  const xeVao = (g, loai) => {
+    const w = XE[loai].w;
+    if (trees.some((t) => Math.abs(t - g) < (CAY_W + w) / 2 + 3)) return false;
+    for (const day of [d1, d2]) {
+      const x = ((g - w / 2 - day.start) / day.rong) * 100;
+      // dãy 2 chừa ~25% bên phải để xe không dính sát nhà hàng
+      if (x >= 3 && x + pct(w, day) <= (day === d2 ? 74 : 97)) {
+        them(day, loai, w, x);
+        return true;
+      }
+    }
+    return false;
+  };
+  const gMin = S_1 + 10,
+    gMax = S_2 + DAY_RONG * 0.74 - 10;
+  // thử lại cả cụm xe nếu chưa đủ SO_XE (cây to nên đôi khi chiếm chỗ)
+  for (let lan = 0; lan < 60; lan++) {
+    [d1, d2].forEach(
+      (d) => (d.props = d.props.filter((p) => p.loai === "cay")),
+    );
+    let truoc = null,
+      dat = 0;
+    for (let i = 0; i < SO_XE; i++) {
+      const loai = kieu[i % kieu.length];
+      for (let k = 0; k < 40; k++) {
+        const g =
+          truoc === null
+            ? rnd(gMin, gMax)
+            : truoc +
+              (Math.random() < 0.5 ? -1 : 1) * rnd(XE_CACH[0], XE_CACH[1]);
+        if (g >= gMin && g <= gMax && xeVao(g, loai)) {
+          truoc = g;
+          dat++;
+          break;
+        }
+      }
+    }
+    if (dat === SO_XE) break;
+  }
+  // một số xe (ngẫu nhiên, ít nhất 1) đứng sát mép lề hơn
+  const xes = [d1, d2].flatMap((d) => d.props.filter((p) => p.loai !== "cay"));
+  xes.forEach((p) => (p.gan = Math.random() < 0.5));
+  if (xes.length && !xes.some((p) => p.gan))
+    xes[Math.floor(Math.random() * xes.length)].gan = true;
+
+  return { days: [cutT, d1, d2, cutP] };
 }
 
 module.exports = { taoPho };
