@@ -3,7 +3,7 @@
     N = MON.length;
   if (!N) return; // chưa có món nào trong DB
   const STEP = 360 / N,
-    R = 58; // R: bán kính vòng món (vh)
+    R = 64; // R: bán kính vòng món (vh)
   const vong = $("#vong"),
     mons = [...vong.querySelectorAll(".mon")];
   let idx = 0;
@@ -50,7 +50,8 @@
     const nut = m.conBan
       ? `<button class="nut nut-phu" data-a="hang">Thêm vào hàng chờ</button><button class="nut" data-a="ngay">Đặt ngay</button>`
       : `<button class="nut" data-a="dong" >Đóng</button>`;
-    const h = hop(`<div class="anh-mon to">${esc(m.icon)}</div><h2>${esc(m.ten)}</h2>
+    const h =
+      hop(`<div class="anh-mon to">${esc(m.icon)}</div><h2>${esc(m.ten)}</h2>
       <p class="gia">${vnd(m.gia)}</p>
       ${m.moTa ? `<p>${esc(m.moTa)}</p>` : ""}
       <p class="phu-chu-nho">${esc(m.loai)}${m.dauBep ? " · Đầu bếp " + esc(m.dauBep) : ""}</p>

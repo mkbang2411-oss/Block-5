@@ -1,4 +1,4 @@
-<%# thanh nút phía trên: Ra phố | (tuỳ trang) | Đăng nhập/Đăng xuất %>
+<%# thanh nút phía trên: Ra phố | (tuỳ trang) | Đăng nhập (khi chưa chọn vai; ra phố là tự thoát vai) %>
 <div class="thanh">
   <a class="nut nut-phu" href="/">Ra phố</a>
   <div class="tabs">
@@ -8,10 +8,6 @@
   </div>
   <div class="tabs">
     <% if (locals.themHref) { %><a class="nut" href="<%= themHref %>"><%= themLabel %></a><% } %>
-    <% if (role) { %>
-      <form method="post" action="/logout" class="form-tran"><button class="nut nut-phu">Đăng xuất (<%= role === 'admin' ? 'đầu bếp' : 'khách' %>)</button></form>
-    <% } else { %>
-      <a class="nut nut-phu" href="/login">Đăng nhập</a>
-    <% } %>
+    <% if (!role) { %><a class="nut nut-phu" href="/login">Đăng nhập</a><% } %>
   </div>
 </div>
