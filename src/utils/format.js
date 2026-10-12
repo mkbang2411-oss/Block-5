@@ -1,0 +1,37 @@
+const formatPrice = (value) =>
+  Number(value).toLocaleString('vi-VN', { maximumFractionDigits: 0 }) + ' đ';
+
+// id hợp lệ = số nguyên dương; sai định dạng thì coi như không tồn tại (404)
+const parseId = (value) => (/^\d{1,9}$/.test(String(value)) && Number(value) > 0 ? Number(value) : null);
+
+const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
+
+// DB không lưu icon -> chọn emoji theo tên món (ưu tiên) rồi tới danh mục
+const ICON_THEO_TEN = [
+  [/cà phê|cafe|coffee/i, '☕'], // đặt trước 'trứng' để 'Cà phê trứng' ra ☕
+  [/trứng/i, '🍳'],
+  [/ph[ởo]|bún|hủ tiếu|miến|bò kho/i, '🍜'],
+  [/spaghetti|mì|pasta|nui/i, '🍝'],
+  [/cơm|xôi/i, '🍚'],
+  [/nem|chả|gỏi cuốn|cuốn/i, '🌯'],
+  [/bánh mì/i, '🥖'],
+  [/bánh/i, '🥟'],
+  [/cá|tôm|mực|hải sản/i, '🐟'],
+  [/thịt|bò|heo|gà|nướng/i, '🍖'],
+  [/trà|chè/i, '🍧'],
+  [/kem|flan|tráng miệng/i, '🍨'],
+  [/nước|sinh tố|bia|rượu/i, '🥤'],
+];
+const ICON_THEO_LOAI = {
+  'Khai vị': '🥗',
+  'Món chính': '🍲',
+  'Tráng miệng': '🍧',
+  'Đồ uống': '🥤',
+  'Món chay': '🥬',
+};
+const dishIcon = (dish) => {
+  const hit = ICON_THEO_TEN.find(([re]) => re.test(dish.name || ''));
+  return hit ? hit[1] : ICON_THEO_LOAI[dish.category] || '🍲';
+};
+
+module.exports = { formatPrice, parseId, asyncHandler, dishIcon };
