@@ -34,14 +34,15 @@ function hop(html) {
   return { el: o.firstChild, dong };
 }
 
-// Lá bay; burst = bung ra từ bên phải khi chuyển cảnh
-function thaLa(n = 1, burst = false) {
+// Lá bay; burst = bung ra khi chuyển cảnh (từ bên phải, hoặc bên trái nếu trai = true)
+function thaLa(n = 1, burst = false, trai = false) {
   for (let i = 0; i < n; i++) {
     const l = document.createElement("i");
     const s = 9 + Math.random() * 11;
+    const x = trai ? Math.random() * 45 : 55 + Math.random() * 45;
     l.className = "la";
     l.style.cssText =
-      `left:${burst ? 55 + Math.random() * 45 : Math.random() * 100}vw;` +
+      `left:${burst ? x : Math.random() * 100}vw;` +
       (burst ? `top:${Math.random() * 60}vh;` : "") +
       `width:${s}px;height:${s}px;--dx:${(Math.random() - 0.5) * 180}px;` +
       `--t:${burst ? 2.5 + Math.random() * 2 : 7 + Math.random() * 6}s;--c:${SAC_LA[i % 4]}`;
@@ -50,23 +51,55 @@ function thaLa(n = 1, burst = false) {
   }
 }
 
-// Lướt lên + nhành cây từ phải lòi ra rồi hụt vào + lá bay
-// xong: đường dẫn (chuyển trang) hoặc hàm (vd. gửi form) chạy khi hiệu ứng kết thúc
-function chuyenCanh(xong) {
+// Chuyển cảnh bằng cành cây (ảnh /img/canh-cay.webp, CSS .canh-cay):
+//   huong = "len"   : trang cũ lướt lên, cành từ PHẢI quét vào (vào quán)
+//   huong = "xuong" : trang cũ lướt xuống, cành từ TRÁI quét vào (ra phố)
+// xong: đường dẫn (chuyển trang) hoặc hàm (vd. gửi form) chạy khi cành đã phủ kín màn hình.
+// Hướng được nhớ trong sessionStorage để trang đích chạy tiếp hiệu ứng (xem head.ejs + CSS html[data-vao]).
+function chuyenCanh(xong, huong = "len") {
   const v = document.createElement("div");
-  v.className = "canh-leo";
-  v.innerHTML =
-    '<i class="cuong"></i>' +
-    Array.from(
-      { length: 16 },
-      (_, i) =>
-        `<i class="l" style="bottom:${i * 6}%;right:${Math.random() * 70}%;transform:rotate(${Math.random() * 360}deg);background:${SAC_LA[i % 3]}"></i>`,
-    ).join("");
+  v.className = "canh-cay " + huong;
   document.body.append(v);
-  document.body.classList.add("di-len");
+  document.body.classList.add(huong === "xuong" ? "di-xuong" : "di-len");
   Am.phat("vut");
-  thaLa(40, true);
-  setTimeout(() => (typeof xong === "function" ? xong() : (location.href = xong)), 1300);
+  thaLa(40, true, huong === "xuong");
+  try {
+    sessionStorage.setItem("huong", huong);
+  } catch (e) {}
+  setTimeout(
+    () => (typeof xong === "function" ? xong() : (location.href = xong)),
+    1300,
+  );
 }
+
+// Trang đích đã đọc cờ "huong" (head.ejs) -> xoá đi để lần tải lại sau không chạy hiệu ứng nữa
+try {
+  sessionStorage.removeItem("huong");
+} catch (e) {}
+
+// Về phố (link "Ra phố" và nút Đăng xuất / Đổi vai) -> hiệu ứng chiều ngược lại
+document.addEventListener("click", (e) => {
+  const a = e.target.closest && e.target.closest('a[href="/"]');
+  if (
+    !a ||
+    e.defaultPrevented ||
+    e.button !== 0 ||
+    e.metaKey ||
+    e.ctrlKey ||
+    e.shiftKey ||
+    e.altKey
+  )
+    return;
+  e.preventDefault();
+  if (!document.body.classList.contains("di-xuong")) chuyenCanh("/", "xuong");
+});
+document.addEventListener("submit", (e) => {
+  const f = e.target;
+  if (!f.matches || !f.matches('form[action="/logout"]') || e.defaultPrevented)
+    return;
+  e.preventDefault();
+  if (!document.body.classList.contains("di-xuong"))
+    chuyenCanh(() => f.submit(), "xuong"); // submit() không kích hoạt lại sự kiện
+});
 
 if (document.body.hasAttribute("data-la")) setInterval(() => thaLa(1), 900);
