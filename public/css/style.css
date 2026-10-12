@@ -250,8 +250,8 @@ h2 {
   position: fixed;
   inset: 0;
   transition:
-    transform 1.1s cubic-bezier(0.7, 0, 0.3, 1),
-    filter 1.1s ease-in;
+    transform 0.7s cubic-bezier(0.7, 0, 0.3, 1),
+    filter 0.7s ease-in;
 }
 body.di-len .man {
   transform: translateY(-110%); /* trang cũ lướt lên */
@@ -263,10 +263,10 @@ body.di-xuong .man {
 }
 .vao-tu-duoi,
 html[data-vao="len"] .man {
-  animation: tuDuoi 1s cubic-bezier(0.2, 0.7, 0.2, 1);
+  animation: tuDuoi 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 html[data-vao="xuong"] .man {
-  animation: tuTren 1s cubic-bezier(0.2, 0.7, 0.2, 1);
+  animation: tuTren 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 @keyframes tuDuoi {
   from {
@@ -317,13 +317,13 @@ html[data-vao="xuong"]::after {
   --lech: -4vw;
 }
 .canh-cay {
-  animation: canh-vao 1.25s cubic-bezier(0.3, 0.1, 0.25, 1) forwards;
+  animation: canh-vao 0.8s cubic-bezier(0.3, 0.1, 0.25, 1) forwards;
 }
 html[data-vao]::after {
   content: "";
   animation:
-    canh-ra 1s cubic-bezier(0.2, 0.7, 0.2, 1) both,
-    canh-an 0s 1s forwards;
+    canh-ra 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both,
+    canh-an 0s 0.7s forwards;
 }
 @keyframes canh-vao {
   /* bồng bềnh: lướt vào, vượt quá một chút rồi nhún lại; mờ khi đang bay nhanh, nét dần khi dừng */
@@ -1968,13 +1968,13 @@ html[data-vao="xuong"]::before {
   left: calc(50% + 14vw);
 }
 .canh-cay.phu {
-  animation: canh-vao 1.25s cubic-bezier(0.3, 0.1, 0.25, 1) 0.1s both;
+  animation: canh-vao 0.8s cubic-bezier(0.3, 0.1, 0.25, 1) 0.06s both;
 }
 html[data-vao]::before {
   content: "";
   animation:
-    canh-ra 1s cubic-bezier(0.2, 0.7, 0.2, 1) 0.06s both,
-    canh-an 0s 1.06s forwards;
+    canh-ra 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) 0.04s both,
+    canh-an 0s 0.74s forwards;
 }
 @media (prefers-reduced-motion: reduce) {
   .canh-cay.phu {

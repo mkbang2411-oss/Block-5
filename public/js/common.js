@@ -57,6 +57,11 @@ function thaLa(n = 1, burst = false, trai = false) {
 // xong: đường dẫn (chuyển trang) hoặc hàm (vd. gửi form) chạy khi cành đã phủ kín màn hình.
 // Hướng được nhớ trong sessionStorage để trang đích chạy tiếp hiệu ứng (xem head.ejs + CSS html[data-vao]).
 function chuyenCanh(xong, huong = "len") {
+  // người dùng tắt hiệu ứng: đi thẳng, không chờ
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    typeof xong === "function" ? xong() : (location.href = xong);
+    return;
+  }
   const v = document.createElement("div");
   v.className = "canh-cay " + huong;
   const v2 = document.createElement("div"); // cành phụ từ phía đối diện
@@ -68,9 +73,10 @@ function chuyenCanh(xong, huong = "len") {
   try {
     sessionStorage.setItem("huong", huong);
   } catch (e) {}
+  // 850ms ~ thời gian cành bay vào (CSS .canh-cay: 0.8s) rồi mới chuyển trang
   setTimeout(
     () => (typeof xong === "function" ? xong() : (location.href = xong)),
-    1300,
+    850,
   );
 }
 
@@ -262,8 +268,46 @@ document.addEventListener("submit", (e) => {
   if (!f.matches || !f.matches('form[action="/logout"]') || e.defaultPrevented)
     return;
   e.preventDefault();
-  if (!document.body.classList.contains("di-xuong"))
-    chuyenCanh(() => f.submit(), "xuong"); // submit() không kích hoạt lại sự kiện
+  if (!document.body.classList.contains("di-xuong")) {
+    // POST /logout chạy song song với hiệu ứng; xong thì về thẳng phố (GET / cũng tự xóa cookie)
+    const gui = fetch(f.action, {
+      method: "POST",
+      credentials: "same-origin",
+      redirect: "manual",
+    }).catch(() => null);
+    chuyenCanh(async () => {
+      await gui;
+      location.href = "/";
+    }, "xuong");
+  }
 });
 
 if (document.body.hasAttribute("data-la")) setInterval(() => thaLa(1), 900);
+
+// Nạp sẵn ảnh cho lần chuyển cảnh kế tiếp khi trình duyệt rảnh (để lúc bấm là có ngay, không phải chờ tải)
+//   - mọi trang: ảnh cành cây
+//   - trang phố: ảnh nền / bếp của khu quán
+//   - các trang khác (khách, đầu bếp): ảnh của phố, để "Ra phố" hiện liền
+(() => {
+  const chung = ["/img/canh-cay.webp"];
+  const rieng =
+    location.pathname === "/"
+      ? ["/img/background.webp", "/img/bep.jpg"]
+      : [
+          "/img/pho/nha-ben.webp",
+          "/img/pho/nha-hang.webp",
+          "/img/pho/cay.webp",
+          "/img/pho/xe1.webp",
+          "/img/pho/xe2.webp",
+          "/img/pho/xe3.webp",
+        ];
+  const nap = () =>
+    chung.concat(rieng).forEach((src) => {
+      const i = new Image();
+      i.decoding = "async";
+      i.src = src;
+    });
+  addEventListener("load", () =>
+    (window.requestIdleCallback || ((f) => setTimeout(f, 800)))(nap),
+  );
+})();
