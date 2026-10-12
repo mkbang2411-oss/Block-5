@@ -9,6 +9,7 @@
 const express = require("express");
 const resources = require("../admin/resources");
 const { parseId, asyncHandler } = require("../utils/format");
+const { khop, layQ } = require("../utils/tim-kiem");
 
 const router = express.Router();
 const PER_PAGE = 9; // lưới 3x3
@@ -54,7 +55,11 @@ async function renderList(
   r,
   { sel = null, sua = null, status = 200, loi = null } = {},
 ) {
-  const all = await r.model.findAll({ include: r.include, order: r.order });
+  const q = layQ(req);
+  // tìm theo tên (không phân biệt hoa/thường và dấu), dùng chung với trang khách
+  const all = (
+    await r.model.findAll({ include: r.include, order: r.order })
+  ).filter((x) => khop(r.label(x), q));
   // phân trang phía server: /admin/dishes?page=2
   const totalPages = Math.max(1, Math.ceil(all.length / PER_PAGE));
   const asked = parseInt(req.query.page, 10);
@@ -71,6 +76,7 @@ async function renderList(
   res.status(status).render("admin/list", {
     r,
     rows,
+    q,
     page,
     totalPages,
     total: all.length,

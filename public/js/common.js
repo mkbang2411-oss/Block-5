@@ -185,6 +185,10 @@ document.addEventListener("click", (e) => {
     !/^\/(dishes|khach|admin)(\/|$)/.test(u.pathname)
   )
     return;
+  // đang ở trang món / quản trị mà chuyển sang trang món / quản trị khác (tab Món ăn - Đầu bếp - Nguyên liệu,
+  // xem chi tiết, thêm, hủy, danh sách món...) -> tải thẳng, không chuyển cảnh
+  const TRONG = /^\/(dishes|admin)(\/|$)/;
+  if (TRONG.test(location.pathname) && TRONG.test(u.pathname)) return;
   e.preventDefault();
   chuyenDia(u.pathname + u.search, huongDia(a));
 });
