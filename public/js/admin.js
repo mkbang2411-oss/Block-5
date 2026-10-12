@@ -1,168 +1,86 @@
-// ===== TRANG QUẢN TRỊ: CRUD theo bảng cho dishes, chefs, ingredients =====
-//   GET    /admin/:resource             danh sách + khung chi tiết bên phải (?page=2&sel=ID mở sẵn món ID)
-//   GET    /admin/:resource/new         form thêm
-//   POST   /admin/:resource             thêm            -> 303
-//   PATCH  /admin/:resource/:id         sửa (form nằm trong khung chi tiết) -> 303
-//   DELETE /admin/:resource/:id         xóa (xác nhận ngay trong khung chi tiết) -> 303
-// Form HTML chỉ có GET/POST nên PATCH/DELETE đi qua method-override (?_method=...),
-// hoàn toàn phía server, không dùng fetch/AJAX/JS client.
-const express = require("express");
-const resources = require("../admin/resources");
-const { parseId, asyncHandler } = require("../utils/format");
-const { khop, layQ } = require("../utils/tim-kiem");
+// ===== TRANG QUẢN TRỊ (phía trình duyệt): khung chi tiết bên phải =====
+// Server (src/routes/admin.js) đã dựng sẵn từng khối chi tiết `.ct` (đang ẩn);
+// file này chỉ lo các nút: Đóng (×), Sửa, Hủy, Xóa (có pop up xác nhận).
+(() => {
+  const chia = $("#chia");
+  if (!chia) return;
 
-const router = express.Router();
-const PER_PAGE = 9; // lưới 3x3
-const navResources = Object.values(resources).map(({ key, title }) => ({
-  key,
-  title,
-}));
-const FLASH = {
-  created: "Thêm thành công.",
-  updated: "Cập nhật thành công.",
-  deleted: "Xóa thành công.",
-};
+  // ---- Đóng khung chi tiết ----
+  function dongCT() {
+    chia.classList.remove("co-chon");
+    chia.querySelectorAll(".o.chon").forEach((o) => o.classList.remove("chon"));
+    // chờ khung thu lại xong mới ẩn nội dung cho mượt
+    setTimeout(() => {
+      if (chia.classList.contains("co-chon")) return;
+      chia.querySelectorAll(".ct").forEach((s) => {
+        s.hidden = true;
+        s.classList.remove("dang-sua");
+      });
+    }, 600);
+    // bỏ ?sel= khỏi thanh địa chỉ (chỉ khi đang ở trang danh sách, tránh làm hỏng URL sau khi form báo lỗi)
+    if (/^\/admin\/[^/]+\/?$/.test(location.pathname)) {
+      const u = new URL(location.href);
+      u.searchParams.delete("sel");
+      history.replaceState(null, "", u);
+    }
+  }
 
-router.use((req, res, next) => {
-  res.locals.navResources = navResources;
-  res.locals.flash = FLASH[req.query.success] || null;
-  next();
-});
+  // ---- Pop up xác nhận xóa ----
+  function hoiXoa(sec) {
+    const ten =
+      sec.querySelector(".ct-dau h2")?.textContent.trim() || "mục này";
+    const form = sec.querySelector(".ct-xoa form");
+    const lyDo = sec.querySelector(".ct-xoa .bao-loi"); // server báo không được xóa
 
-router.get("/", (req, res) => res.redirect(303, "/admin/dishes"));
+    if (!form || lyDo) {
+      const h = hop(`<h2>Không thể xóa</h2>
+        <p>${esc(lyDo ? lyDo.textContent.trim() : "Mục này hiện không thể xóa.")}</p>
+        <div class="nut-hang"><button type="button" class="nut" data-a="dong">Đóng</button></div>`);
+      h.el.addEventListener("click", (e) => {
+        if (e.target.dataset.a === "dong") h.dong();
+      });
+      return;
+    }
 
-async function findRecord(r, idParam) {
-  const id = parseId(idParam);
-  if (!id) return null;
-  return r.model.findByPk(id, { include: r.include });
-}
+    const h = hop(`<h2>Xác nhận xóa</h2>
+      <p>Bạn có chắc chắn muốn xóa <b>${esc(ten)}</b> không?</p>
+      <p class="phu-chu-nho">Hành động này không thể hoàn tác.</p>
+      <div class="nut-hang">
+        <button type="button" class="nut nut-phu" data-a="khong">Không xóa</button>
+        <button type="button" class="nut" data-a="xoa">Xóa luôn</button>
+      </div>`);
+    h.el.querySelector('[data-a="khong"]').focus(); // mặc định chọn "Không xóa" cho an toàn
+    h.el.addEventListener("click", (e) => {
+      const a = e.target.dataset.a;
+      if (a === "khong") h.dong();
+      if (a === "xoa") {
+        h.dong();
+        form.submit(); // gửi DELETE qua ?_method=DELETE (đã nằm sẵn trong action)
+      }
+    });
+  }
 
-async function renderForm(
-  res,
-  r,
-  { record = null, values, errors = {}, status = 200 },
-) {
-  const options = await r.loadOptions();
-  res
-    .status(status)
-    .render("admin/form", { r, record, values, errors, options });
-}
-
-// Vẽ trang danh sách. sel = id đang mở ở khung chi tiết; sua = { values, errors } khi form sửa trả lỗi.
-async function renderList(
-  req,
-  res,
-  r,
-  { sel = null, sua = null, status = 200, loi = null } = {},
-) {
-  const q = layQ(req);
-  // tìm theo tên (không phân biệt hoa/thường và dấu), dùng chung với trang khách
-  const all = (
-    await r.model.findAll({ include: r.include, order: r.order })
-  ).filter((x) => khop(r.label(x), q));
-  // phân trang phía server: /admin/dishes?page=2
-  const totalPages = Math.max(1, Math.ceil(all.length / PER_PAGE));
-  const asked = parseInt(req.query.page, 10);
-  const page = Math.min(
-    Math.max(Number.isInteger(asked) ? asked : 1, 1),
-    totalPages,
-  );
-  const rows = all.slice((page - 1) * PER_PAGE, page * PER_PAGE);
-  const options = await r.loadOptions();
-  const chan = {}; // id -> lý do không được xóa
-  for (const row of rows)
-    chan[row.id] = r.blockDelete ? await r.blockDelete(row) : null;
-  const selId = sel || parseId(req.query.sel);
-  res.status(status).render("admin/list", {
-    r,
-    rows,
-    q,
-    page,
-    totalPages,
-    total: all.length,
-    options,
-    chan,
-    sel: rows.some((x) => x.id === selId) ? selId : null,
-    sua,
-    loi,
+  // ---- Các nút trong khung chi tiết ----
+  chia.addEventListener("click", (e) => {
+    const nut = e.target.closest("[data-a]");
+    if (!nut) return;
+    const sec = nut.closest(".ct");
+    switch (nut.dataset.a) {
+      case "dong":
+        dongCT();
+        break;
+      case "sua":
+        sec.classList.add("dang-sua");
+        sec
+          .querySelector(".ct-sua input, .ct-sua select, .ct-sua textarea")
+          ?.focus();
+        break;
+      case "huy":
+        sec.classList.remove("dang-sua");
+        break;
+      case "xoa":
+        hoiXoa(sec);
+        break;
+    }
   });
-}
-
-Object.values(resources).forEach((r) => {
-  const base = `/${r.key}`;
-  const trang = (req) =>
-    parseInt(req.query.page, 10) > 1 ? parseInt(req.query.page, 10) : 1;
-
-  router.get(
-    base,
-    asyncHandler((req, res) => renderList(req, res, r)),
-  );
-
-  router.get(
-    `${base}/new`,
-    asyncHandler(async (req, res) => {
-      const empty = Object.fromEntries(
-        r.fields.map((f) => [
-          f.name,
-          f.type === "multiselect" ? [] : f.type === "checkbox" ? true : "",
-        ]),
-      );
-      await renderForm(res, r, { values: empty });
-    }),
-  );
-
-  router.post(
-    base,
-    asyncHandler(async (req, res) => {
-      const { errors, values, data } = await r.parse(req.body, null);
-      if (Object.keys(errors).length) {
-        return renderForm(res, r, { values, errors, status: 400 });
-      }
-      const record = await r.model.create(data);
-      if (r.afterSave) await r.afterSave(record, data);
-      res.redirect(303, `/admin${base}?success=created`);
-    }),
-  );
-
-  router.patch(
-    `${base}/:id`,
-    asyncHandler(async (req, res, next) => {
-      const record = await findRecord(r, req.params.id);
-      if (!record) return next();
-      const { errors, values, data } = await r.parse(req.body, record);
-      if (Object.keys(errors).length) {
-        return renderList(req, res, r, {
-          sel: record.id,
-          sua: { values, errors },
-          status: 400,
-        });
-      }
-      await record.update(data);
-      if (r.afterSave) await r.afterSave(record, data);
-      res.redirect(
-        303,
-        `/admin${base}?page=${trang(req)}&sel=${record.id}&success=updated`,
-      );
-    }),
-  );
-
-  router.delete(
-    `${base}/:id`,
-    asyncHandler(async (req, res, next) => {
-      const record = await findRecord(r, req.params.id);
-      if (!record) return next();
-      const blockReason = r.blockDelete ? await r.blockDelete(record) : null;
-      if (blockReason) {
-        return renderList(req, res, r, {
-          sel: record.id,
-          status: 409,
-          loi: blockReason,
-        });
-      }
-      await record.destroy();
-      res.redirect(303, `/admin${base}?page=${trang(req)}&success=deleted`);
-    }),
-  );
-});
-
-module.exports = router;
+})();
