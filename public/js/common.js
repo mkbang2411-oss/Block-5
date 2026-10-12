@@ -175,7 +175,8 @@ document.addEventListener("click", (e) => {
     e.shiftKey ||
     e.altKey ||
     a.target === "_blank" ||
-    a.classList.contains("tat")
+    a.classList.contains("tat") ||
+    a.closest(".phan-trang, .tim") // đổi số trang / xóa tìm kiếm: tải thẳng, không chuyển cảnh
   )
     return;
   const u = new URL(a.href, location.href);

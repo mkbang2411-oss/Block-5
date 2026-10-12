@@ -2092,3 +2092,92 @@ html[data-vao]::before {
   justify-content: center;
   margin-top: 22px;
 }
+
+/* =====================================================================
+   KHÁCH: danh sách & chi tiết món dùng chung phong cách bếp (main.bep)
+   ===================================================================== */
+.bep.cuon {
+  justify-content: flex-start;
+  padding-bottom: 48px;
+}
+.bep .tim input {
+  border: 1.5px solid rgba(110, 75, 45, 0.5);
+  border-radius: 999px;
+  padding: 9px 18px;
+  background: rgba(255, 255, 255, 0.75);
+  color: var(--nau);
+}
+.bep .tim input:focus {
+  outline: 2px solid #4f9f86;
+  outline-offset: 1px;
+}
+.bep .dau-khach {
+  width: 100%;
+  margin-top: 14px;
+}
+/* màn thấp: lưới không bị ép nhỏ, cả trang cuộn */
+.bep.cuon .chia {
+  flex: 1 0 auto;
+}
+.bep.cuon .cot-luoi {
+  min-height: auto;
+}
+.bep.cuon .luoi {
+  flex: 1 0 auto;
+  grid-template-rows: repeat(3, minmax(160px, 1fr));
+}
+@media (max-width: 700px) {
+  .bep.cuon .luoi {
+    grid-template-rows: none;
+    grid-auto-rows: minmax(160px, auto);
+  }
+}
+.bep .dau-khach .tim {
+  margin-bottom: 0;
+}
+.bep .hop.hop-giua {
+  margin: 30px auto 24px;
+  padding: 30px 26px 22px;
+}
+
+/* popup món ở bàn tròn: Chi tiết / Thêm vào giỏ hàng / Đặt ngay luôn nằm trên 1 hàng */
+.hang-mon {
+  flex-wrap: nowrap;
+  gap: 8px;
+}
+.hang-mon .nut {
+  padding: 8px 14px;
+  white-space: nowrap;
+}
+@media (max-width: 480px) {
+  .hang-mon {
+    gap: 5px;
+  }
+  .hang-mon .nut {
+    padding: 7px 9px;
+    font-size: 0.78rem;
+  }
+}
+
+/* tìm kiếm dùng chung: nút Xóa tìm kiếm ẩn khi chưa gõ gì */
+.tim .nut[hidden] {
+  display: none;
+}
+
+/* gợi ý "Nhà hàng hướng này": khi đang ở bên phải nhà hàng thì mũi tên chỉ sang trái */
+.goi-y.trai {
+  flex-direction: row-reverse;
+  padding: 6px 14px 6px 18px;
+}
+.goi-y.trai svg {
+  animation-name: chi-trai;
+}
+@keyframes chi-trai {
+  from,
+  to {
+    transform: scaleX(-1);
+  }
+  50% {
+    transform: scaleX(-1) translateX(6px);
+  }
+}

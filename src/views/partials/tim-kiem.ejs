@@ -1,0 +1,6 @@
+<%# Ô tìm kiếm dùng chung (khách + đầu bếp). Có JS: gõ tới đâu lọc tới đó (public/js/tim-kiem.js). Không JS: bấm Tìm như form thường. %>
+<form method="get" action="<%= action %>" class="tim" data-tim>
+  <input type="text" name="q" value="<%= q %>" placeholder="<%= placeholder %>" autocomplete="off">
+  <button class="nut">Tìm</button>
+  <a class="nut nut-phu" href="<%= action %>" data-xoa<%= q ? '' : ' hidden' %>>Xóa tìm kiếm</a>
+</form>

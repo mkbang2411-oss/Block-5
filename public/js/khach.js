@@ -48,7 +48,7 @@
     const cho = Math.floor(Math.random() * 4) + 2; // 2-5 phút
     const nl = m.nguyenLieu.map((n) => esc(n.ten)).join(", ");
     const nut = m.conBan
-      ? `<button class="nut nut-phu" data-a="hang">Thêm vào hàng chờ</button><button class="nut" data-a="ngay">Đặt ngay</button>`
+      ? `<button class="nut nut-phu" data-a="hang">Thêm vào giỏ hàng</button><button class="nut" data-a="ngay">Đặt ngay</button>`
       : `<button class="nut" data-a="dong" >Đóng</button>`;
     const h =
       hop(`<div class="anh-mon to">${esc(m.icon)}</div><h2>${esc(m.ten)}</h2>
@@ -57,7 +57,7 @@
       <p class="phu-chu-nho">${esc(m.loai)}${m.dauBep ? " · Đầu bếp " + esc(m.dauBep) : ""}</p>
       ${nl ? `<p class="phu-chu-nho">Nguyên liệu: ${nl}</p>` : ""}
       ${m.conBan ? `<p>Dự kiến chờ khoảng <b>${cho} phút</b></p>` : `<p><b>Món này hiện đã hết.</b></p>`}
-      <div class="nut-hang"><a class="nut nut-phu" href="/dishes/${m.id}">Chi tiết</a>${nut}</div>`);
+      <div class="nut-hang hang-mon"><a class="nut nut-phu" href="/dishes/${m.id}">Chi tiết</a>${nut}</div>`);
     h.el.addEventListener("click", (e) => {
       const a = e.target.dataset.a;
       if (a === "dong") h.dong();
