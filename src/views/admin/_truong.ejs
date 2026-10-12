@@ -21,6 +21,8 @@
               <% }) %>
             </select>
             <small class="goi-y-nho">Giữ Ctrl/Cmd để chọn nhiều.</small>
+          <% } else if (f.type === 'image') { %>
+            <input type="file" id="<%= idp %><%= f.name %>" name="image" accept="image/jpeg,image/png,image/webp">
           <% } else { %>
             <input type="text" id="<%= idp %><%= f.name %>" name="<%= f.name %>" value="<%= v %>" <%= f.inputmode ? `inputmode=${f.inputmode}` : '' %>>
           <% } %>

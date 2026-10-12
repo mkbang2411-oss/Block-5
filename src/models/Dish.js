@@ -19,6 +19,8 @@ const Dish = sequelize.define(
     },
     category: { type: DataTypes.STRING(60), allowNull: false, validate: { isIn: [CATEGORIES] } },
     available: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
+    imageUrl: { type: DataTypes.STRING(500) },
+    imagePath: { type: DataTypes.STRING(200) },
   },
   { tableName: 'dishes' }
 );

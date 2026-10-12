@@ -3,7 +3,7 @@
 <main class="man bep cuon">
   <%- include('../partials/thanh-tren', { themHref: '/dishes', themLabel: '← Danh sách món' }) %>
   <section class="hop hop-giua rong">
-    <div class="ct-dau"><span class="bieu"><%= dishIcon(dish) %></span><h2><%= dish.name %></h2></div>
+    <div class="ct-dau"><span class="bieu"><%- dishThumb(dish) %></span><h2><%= dish.name %></h2></div>
     <dl class="ct-ds">
       <dt>Giá</dt><dd><%= formatPrice(dish.price) %></dd>
       <dt>Mô tả</dt><dd><%= dish.description || '—' %></dd>

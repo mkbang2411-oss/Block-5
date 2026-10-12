@@ -10,7 +10,28 @@ const express = require("express");
 const resources = require("../admin/resources");
 const { parseId, asyncHandler } = require("../utils/format");
 const { khop, layQ } = require("../utils/tim-kiem");
+const multer = require("multer");
+const { uploadImage, removeImage, EXT } = require("../utils/storage");
 
+// nhận ảnh trong RAM (không ghi ra đĩa vì Render xóa đĩa mỗi lần deploy), tối đa 3MB
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 3 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (!EXT[file.mimetype]) req.loiAnh = "Chỉ nhận ảnh JPG, PNG hoặc WEBP";
+    cb(null, !!EXT[file.mimetype]);
+  },
+});
+// lỗi ảnh không làm sập request mà đưa vào errors.image để form báo lại
+const nhanAnh = (req, res, next) =>
+  upload.single("image")(req, res, (err) => {
+    if (err)
+      req.loiAnh =
+        err.code === "LIMIT_FILE_SIZE"
+          ? "Ảnh tối đa 3MB"
+          : "Không đọc được ảnh, vui lòng thử lại";
+    next();
+  });
 const router = express.Router();
 const PER_PAGE = 9; // lưới 3x3
 const navResources = Object.values(resources).map(({ key, title }) => ({
@@ -111,12 +132,21 @@ Object.values(resources).forEach((r) => {
     }),
   );
 
+    const mw = r.hasImage ? [nhanAnh] : [];
+
   router.post(
     base,
+    ...mw,
     asyncHandler(async (req, res) => {
       const { errors, values, data } = await r.parse(req.body, null);
+      if (req.loiAnh) errors.image = req.loiAnh;
       if (Object.keys(errors).length) {
         return renderForm(res, r, { values, errors, status: 400 });
+      }
+      if (req.file) {
+        const img = await uploadImage(req.file);
+        data.imageUrl = img.url;
+        data.imagePath = img.path;
       }
       const record = await r.model.create(data);
       if (r.afterSave) await r.afterSave(record, data);
@@ -126,10 +156,12 @@ Object.values(resources).forEach((r) => {
 
   router.patch(
     `${base}/:id`,
+    ...mw,
     asyncHandler(async (req, res, next) => {
       const record = await findRecord(r, req.params.id);
       if (!record) return next();
       const { errors, values, data } = await r.parse(req.body, record);
+      if (req.loiAnh) errors.image = req.loiAnh;
       if (Object.keys(errors).length) {
         return renderList(req, res, r, {
           sel: record.id,
@@ -137,7 +169,14 @@ Object.values(resources).forEach((r) => {
           status: 400,
         });
       }
+      const anhCu = record.imagePath;
+      if (req.file) {
+        const img = await uploadImage(req.file);
+        data.imageUrl = img.url;
+        data.imagePath = img.path;
+      }
       await record.update(data);
+      if (req.file) await removeImage(anhCu); // lưu DB xong mới xóa ảnh cũ
       if (r.afterSave) await r.afterSave(record, data);
       res.redirect(
         303,
@@ -160,6 +199,7 @@ Object.values(resources).forEach((r) => {
         });
       }
       await record.destroy();
+      if (r.hasImage) await removeImage(record.imagePath);
       res.redirect(303, `/admin${base}?page=${trang(req)}&success=deleted`);
     }),
   );

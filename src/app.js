@@ -3,7 +3,7 @@ const express = require("express");
 const cookieParser = require("cookie-parser");
 const methodOverride = require("method-override");
 const { attachRole, requireAdmin } = require("./middleware/auth");
-const { formatPrice, dishIcon } = require("./utils/format");
+const { formatPrice, dishIcon, dishThumb } = require("./utils/format");
 
 const app = express();
 
@@ -22,6 +22,7 @@ app.use(attachRole);
 app.use((req, res, next) => {
   res.locals.formatPrice = formatPrice;
   res.locals.dishIcon = dishIcon;
+  res.locals.dishThumb = dishThumb;
   next();
 });
 

@@ -2,7 +2,7 @@
 // cách validate dữ liệu (parse) và cách lưu thêm quan hệ (afterSave).
 const { Sequelize, Op } = require("sequelize");
 const { Dish, Chef, Ingredient } = require("../models");
-const { formatPrice, dishIcon } = require("../utils/format");
+const { formatPrice, dishThumb } = require("../utils/format");
 const { UNITS, CATEGORIES, LIMITS } = require("../constants");
 
 const raw = (v) => (typeof v === "string" ? v : "");
@@ -25,6 +25,7 @@ async function nameTaken(model, name, ignoreId) {
 const dishes = {
   key: "dishes",
   model: Dish,
+  hasImage: true,
   title: "Món ăn",
   singular: "món ăn",
   include: [
@@ -35,7 +36,7 @@ const dishes = {
   label: (r) => r.name,
   // ô hiển thị trên lưới ở trang quản trị
   tile: (r) => ({
-    icon: dishIcon(r),
+    icon: dishThumb(r),
     title: r.name,
     sub: formatPrice(r.price) + (r.available ? "" : " · Hết món"),
   }),
@@ -88,6 +89,12 @@ const dishes = {
       placeholder: "— Chọn đầu bếp —",
     },
     { name: "ingredientIds", label: "Nguyên liệu", type: "multiselect" },
+    {
+      name: "image",
+      label: "Ảnh món",
+      type: "image",
+      hint: "JPG/PNG/WEBP, tối đa 3MB. Bỏ trống = giữ ảnh cũ",
+    },
   ],
   async loadOptions() {
     const [chefs, ingredients] = await Promise.all([

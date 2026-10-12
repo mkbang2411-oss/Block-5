@@ -16,7 +16,7 @@
       <div class="luoi">
         <% rows.forEach(row => { const t = r.tile(row); %>
           <a class="o<%= row.id === sel ? ' chon' : '' %>" data-id="<%= row.id %>" href="<%= lk({ page, sel: row.id }) %>" title="Bấm để xem chi tiết">
-            <span class="bieu"><%= t.icon %></span><b><%= t.title %></b><small><%= t.sub %></small>
+            <span class="bieu"><%- t.icon %></span><b><%= t.title %></b><small><%= t.sub %></small>
           </a>
         <% }) %>
       </div>
@@ -44,7 +44,7 @@
         <button type="button" class="dong-ct" data-a="dong" aria-label="Đóng">×</button>
 
         <div class="ct-xem">
-          <div class="ct-dau"><span class="bieu"><%= t.icon %></span><h2><%= r.label(row) %></h2></div>
+          <div class="ct-dau"><span class="bieu"><%- t.icon %></span><h2><%= r.label(row) %></h2></div>
           <dl class="ct-ds">
             <% r.columns.slice(1).forEach(c => { %><dt><%= c.label %></dt><dd><%= c.value(row) %></dd><% }) %>
           </dl>
@@ -68,7 +68,7 @@
         </div>
 
         <%# novalidate: để server kiểm tra và trả 400 %>
-        <form method="post" novalidate class="ct-sua" action="/admin/<%= r.key %>/<%= row.id %>?_method=PATCH&page=<%= page %>">
+        <form method="post" enctype="multipart/form-data" novalidate class="ct-sua" action="/admin/<%= r.key %>/<%= row.id %>?_method=PATCH&page=<%= page %>">
           <h2>Sửa <%= r.singular %></h2>
           <% if (Object.keys(errors).length) { %><div class="bao-loi">Dữ liệu chưa hợp lệ, vui lòng kiểm tra lại.</div><% } %>
           <%- include('_truong', { r, values, errors, options, idp: 'e' + row.id + '-' }) %>

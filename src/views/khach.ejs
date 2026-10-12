@@ -11,7 +11,7 @@
     <div class="trong"><div class="hop"><h2>Quán chưa có món</h2><p>Đầu bếp chưa thêm món nào vào thực đơn.</p></div></div>
   <% } else { %>
   <div class="ban"><div class="ghe-vong"><% [-50, -25, 0, 25, 50].forEach(a => { %><i class="ghe" style="transform:rotate(<%= a %>deg) translateY(-99vh)"></i><% }) %></div><div class="mat"><div class="vong" id="vong">
-    <% mon.forEach((x, i) => { %><button class="mon" data-i="<%= i %>"><span class="dia"><em><%= x.icon %></em></span><b><%= x.ten %></b></button><% }) %>
+    <% mon.forEach((x, i) => { %><button class="mon" data-i="<%= i %>"><span class="dia"><% if (x.anh) { %><img class="anh-dia" src="<%= x.anh %>" alt="<%= x.ten %>" loading="lazy"><% } else { %><em><%= x.icon %></em><% } %></span><b><%= x.ten %></b></button><% }) %>
   </div></div></div>
   <% } %>
   <div class="nang" aria-hidden="true">

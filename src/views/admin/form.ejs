@@ -4,7 +4,7 @@
 <main class="man bep cuon">
   <%- include('_nav', { active: r.key }) %>
   <%# novalidate: để server kiểm tra và trả 400 %>
-  <form method="post" novalidate class="hop hop-giua rong"
+    <form method="post" enctype="multipart/form-data" novalidate class="hop hop-giua rong"
         action="<%= isEdit ? `/admin/${r.key}/${record.id}?_method=PATCH` : `/admin/${r.key}` %>">
     <h2><%= isEdit ? 'Sửa' : 'Thêm' %> <%= r.singular %></h2>
     <% if (Object.keys(errors).length) { %><div class="bao-loi">Dữ liệu chưa hợp lệ, vui lòng kiểm tra lại (giá trị đã nhập được giữ nguyên).</div><% } %>

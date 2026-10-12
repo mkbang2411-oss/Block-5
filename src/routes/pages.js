@@ -31,6 +31,7 @@ router.get(
       ten: d.name,
       gia: Number(d.price),
       icon: dishIcon(d),
+      anh: d.imageUrl || "", // URL ảnh trên Supabase (rỗng = dùng emoji)
       moTa: d.description || "",
       loai: d.category,
       conBan: d.available,

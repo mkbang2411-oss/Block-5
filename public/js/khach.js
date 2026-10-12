@@ -51,7 +51,7 @@
       ? `<button class="nut nut-phu" data-a="hang">Thêm vào giỏ hàng</button><button class="nut" data-a="ngay">Đặt ngay</button>`
       : `<button class="nut" data-a="dong" >Đóng</button>`;
     const h =
-      hop(`<div class="anh-mon to">${esc(m.icon)}</div><h2>${esc(m.ten)}</h2>
+      hop(`<div class="anh-mon to">${m.anh ? `<img src="${esc(m.anh)}" alt="${esc(m.ten)}">` : esc(m.icon)}</div><h2>${esc(m.ten)}</h2>
       <p class="gia">${vnd(m.gia)}</p>
       ${m.moTa ? `<p>${esc(m.moTa)}</p>` : ""}
       <p class="phu-chu-nho">${esc(m.loai)}${m.dauBep ? " · Đầu bếp " + esc(m.dauBep) : ""}</p>

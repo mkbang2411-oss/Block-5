@@ -16,7 +16,7 @@
       <div class="luoi">
         <% dishes.forEach(d => { %>
           <a class="o<%= d.id === sel ? ' chon' : '' %>" data-id="<%= d.id %>" href="<%= lk({ page, sel: d.id }) %>" title="Bấm để xem chi tiết">
-            <span class="bieu"><%= dishIcon(d) %></span>
+            <span class="bieu"><%- dishThumb(d) %></span>
             <b><%= d.name %></b>
             <small><%= formatPrice(d.price) %> · <%= d.category %></small>
             <small><%= d.chef ? 'Đầu bếp ' + d.chef.name : '' %></small>
@@ -40,7 +40,7 @@
       <section class="ct hop" data-id="<%= d.id %>" <%= d.id === sel ? '' : 'hidden' %>>
         <button type="button" class="dong-ct" data-a="dong" aria-label="Đóng">×</button>
         <div class="ct-xem">
-          <div class="ct-dau"><span class="bieu"><%= dishIcon(d) %></span><h2><%= d.name %></h2></div>
+          <div class="ct-dau"><span class="bieu"><%- dishThumb(d) %></span><h2><%= d.name %></h2></div>
           <dl class="ct-ds">
             <dt>Giá</dt><dd><%= formatPrice(d.price) %></dd>
             <dt>Mô tả</dt><dd><%= d.description || '—' %></dd>

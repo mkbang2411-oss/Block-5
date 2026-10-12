@@ -34,4 +34,12 @@ const dishIcon = (dish) => {
   return hit ? hit[1] : ICON_THEO_LOAI[dish.category] || '🍲';
 };
 
-module.exports = { formatPrice, parseId, asyncHandler, dishIcon };
+// ô hình của món: có ảnh thì trả thẻ <img>, không thì dùng emoji (in bằng <%- %>)
+const escHtml = (v) =>
+  String(v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const dishThumb = (dish) =>
+  dish.imageUrl
+    ? `<img class="anh-bieu" src="${escHtml(dish.imageUrl)}" alt="${escHtml(dish.name)}" loading="lazy">`
+    : dishIcon(dish);
+
+module.exports = { formatPrice, parseId, asyncHandler, dishIcon, dishThumb };
