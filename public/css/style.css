@@ -1411,10 +1411,6 @@ html[data-vao]::after {
 .cuon > * {
   flex-shrink: 0;
 }
-.form-tran {
-  display: inline;
-  margin: 0;
-}
 .goc-phai {
   display: flex;
   gap: 10px;
@@ -1454,10 +1450,6 @@ a.nut {
 .trang .hop {
   color: var(--nau);
 }
-.noi-dung {
-  width: min(1000px, 100%);
-  margin-top: 18px;
-}
 .hop-giua {
   margin: 24px auto;
 }
@@ -1491,16 +1483,6 @@ a.nut {
   border-radius: 10px;
   background: #fffaf0;
   color: var(--nau);
-}
-.luoi-cuon {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 16px;
-}
-.luoi-cuon .o {
-  padding: 16px 10px;
-  min-height: 160px;
-  text-align: center;
 }
 .o {
   text-decoration: none;

@@ -21,4 +21,4 @@ const khop = (ten, q) => {
 const layQ = (req) =>
   typeof req.query.q === "string" ? req.query.q.trim() : "";
 
-module.exports = { boDau, khop, layQ };
+module.exports = { khop, layQ };

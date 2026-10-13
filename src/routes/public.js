@@ -3,9 +3,9 @@ const express = require("express");
 const { Dish, Chef } = require("../models");
 const { parseId, asyncHandler } = require("../utils/format");
 const { khop, layQ } = require("../utils/tim-kiem");
+const { paginate } = require("../utils/paginate");
 
 const router = express.Router();
-const PER_PAGE = 9; // lưới 3x3 giống trang đầu bếp
 
 // GET /dishes?q=...  -> danh sách món, tìm theo tên bằng query q
 router.get(
@@ -19,10 +19,7 @@ router.get(
     // tìm không phân biệt hoa/thường và dấu tiếng Việt (dùng chung với trang đầu bếp)
     const all = (await Dish.findAll(options)).filter((d) => khop(d.name, q));
     // phân trang phía server: /dishes?q=...&page=2 (giống trang quản trị)
-    const totalPages = Math.max(1, Math.ceil(all.length / PER_PAGE));
-    const asked = parseInt(req.query.page, 10);
-    const page = Math.min(totalPages, asked > 0 ? asked : 1);
-    const dishes = all.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+    const { items: dishes, page, totalPages } = paginate(all, req.query.page);
     // ?sel=ID mở sẵn khung chi tiết (khi không có JS); chỉ nhận món nằm trong trang hiện tại
     const selId = parseId(req.query.sel);
     const sel = dishes.some((d) => d.id === selId) ? selId : null;

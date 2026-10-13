@@ -12,6 +12,7 @@ const express = require("express");
 const resources = require("../admin/resources");
 const { parseId, asyncHandler } = require("../utils/format");
 const { khop, layQ } = require("../utils/tim-kiem");
+const { paginate } = require("../utils/paginate");
 const multer = require("multer");
 const { uploadImage, removeImage, EXT } = require("../utils/storage");
 
@@ -35,7 +36,6 @@ const nhanAnh = (req, res, next) =>
     next();
   });
 const router = express.Router();
-const PER_PAGE = 9; // lưới 3x3
 const navResources = Object.values(resources).map(({ key, title }) => ({
   key,
   title,
@@ -85,13 +85,7 @@ async function renderList(req, res, r, { sel = null, status = 200 } = {}) {
     await r.model.findAll({ include: r.include, order: r.order })
   ).filter((x) => khop(r.label(x), q));
   // phân trang phía server: /admin/dishes?page=2
-  const totalPages = Math.max(1, Math.ceil(all.length / PER_PAGE));
-  const asked = parseInt(req.query.page, 10);
-  const page = Math.min(
-    Math.max(Number.isInteger(asked) ? asked : 1, 1),
-    totalPages,
-  );
-  const rows = all.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+  const { items: rows, page, totalPages } = paginate(all, req.query.page);
   const selId = sel || parseId(req.query.sel);
   res.status(status).render("admin/list", {
     r,

@@ -150,7 +150,6 @@ function chuyenDia(url, huong = "phai") {
 }
 // Hướng theo ngữ cảnh: sang tab/trang sau = từ phải; về tab/trang trước, "Hủy" = từ trái
 function huongDia(a) {
-  if (a.dataset.huong) return a.dataset.huong;
   const so = (el) => parseInt(el.textContent, 10);
   const pt = a.closest(".phan-trang");
   if (pt) {
@@ -298,7 +297,9 @@ if (document.body.hasAttribute("data-la")) setInterval(() => thaLa(1), 900);
       i.decoding = "async";
       i.src = src;
     });
-  addEventListener("load", () =>
-    (window.requestIdleCallback || ((f) => setTimeout(f, 800)))(nap),
-  );
+  // trang quản trị không cần nạp trước (~500KB ảnh phố)
+  if (!location.pathname.startsWith("/admin"))
+    addEventListener("load", () =>
+      (window.requestIdleCallback || ((f) => setTimeout(f, 800)))(nap),
+    );
 })();

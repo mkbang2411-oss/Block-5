@@ -4,7 +4,7 @@ const compression = require("compression");
 const cookieParser = require("cookie-parser");
 const methodOverride = require("method-override");
 const { attachRole, requireAdmin } = require("./middleware/auth");
-const { formatPrice, dishIcon, dishThumb } = require("./utils/format");
+const { formatPrice, dishThumb } = require("./utils/format");
 
 const app = express();
 
@@ -15,10 +15,16 @@ app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
 const PUBLIC = path.join(__dirname, "..", "public");
-// ảnh ít đổi -> cho trình duyệt giữ 30 ngày (đổi ảnh thì nên đổi tên file) (khỏi hỏi lại server mỗi lần chuyển cảnh)
-app.use("/img", express.static(path.join(PUBLIC, "img"), { maxAge: "30d" }));
-// CSS/JS giữ trong cache 1 ngày (đang sửa giao diện liên tục thì đổi "1d" thành "1h" hoặc bỏ maxAge)
-app.use(express.static(PUBLIC, { maxAge: "1d" }));
+// Một static duy nhất: ảnh (/img) ít đổi nên cache 30 ngày (đổi ảnh thì đổi tên file), CSS/JS cache 1 ngày
+app.use(
+  express.static(PUBLIC, {
+    maxAge: "1d",
+    setHeaders: (res, file) => {
+      if (/[\\/]img[\\/]/.test(file))
+        res.setHeader("Cache-Control", "public, max-age=2592000");
+    },
+  }),
+);
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 // <form method="POST" action="...?_method=PATCH|DELETE"> -> req.method = PATCH|DELETE
@@ -26,7 +32,6 @@ app.use(methodOverride("_method"));
 app.use(attachRole);
 app.use((req, res, next) => {
   res.locals.formatPrice = formatPrice;
-  res.locals.dishIcon = dishIcon;
   res.locals.dishThumb = dishThumb;
   next();
 });

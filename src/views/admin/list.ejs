@@ -21,14 +21,7 @@
         <% }) %>
       </div>
       <% } %>
-      <%# dãy trang luôn hiện, kể cả khi chỉ có 1 trang %>
-      <nav class="phan-trang" aria-label="Phân trang">
-        <% if (page === 1) { %><span class="nut nut-phu tat">&lt;</span><% } else { %><a class="nut nut-phu" href="<%= lk({ page: page - 1 }) %>" aria-label="Trang trước">&lt;</a><% } %>
-        <% for (let n = 1; n <= totalPages; n++) { %>
-          <a class="nut <%= n === page ? 'on' : 'nut-phu' %>" href="<%= lk({ page: n }) %>"><%= n %></a>
-        <% } %>
-        <% if (page === totalPages) { %><span class="nut nut-phu tat">&gt;</span><% } else { %><a class="nut nut-phu" href="<%= lk({ page: page + 1 }) %>" aria-label="Trang sau">&gt;</a><% } %>
-      </nav>
+      <%- include('../partials/phan-trang', { page, totalPages, lk }) %>
     </div>
 
     <%# Khung chi tiết: mỗi mục một khối (chỉ xem), JS chỉ bật/tắt; Sửa/Xóa là link sang trang riêng %>
