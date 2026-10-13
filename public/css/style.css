@@ -427,6 +427,17 @@ html[data-vao]::after {
   /* ==== CHỖ TỰ CĂN VỊ TRÍ (đơn vị = u, số dương = hạ xuống, số âm = nâng lên) ==== */
   --day-y: 1; /* các dãy nhà bên (kể cả cây, xe đứng trên dãy đó) */
   --nh-y: 0; /* riêng nhà hàng */
+  --song-h: calc(
+    var(--u) * 15
+  ); /* bề cao dải sông ở đáy màn hình: tăng thì phố được nâng lên cao hơn */
+  /* ==== MẶT ĐẤT (mới): rút ngắn lòng đường + vỉa hè để cả phố hạ xuống, mái nhà hàng không bị cắt ====
+     Vỉa hè được rút ngắn từ phía BÓ VỈA (mép dưới), mép trên giữ nguyên quan hệ với chân nhà,
+     nên các ngôi nhà đi cùng vỉa hè chứ không bị "bay" lên. Muốn phố cao/thấp hơn: chỉnh 2 số này. */
+  --duong-h: calc(var(--u) * 6); /* lòng đường (cũ 9u) */
+  --via-h: calc(var(--u) * 12.5); /* vỉa hè (cũ 18u) */
+  --chan-nha: calc(
+    var(--u) * 6.4
+  ); /* chân nhà nằm sâu cách mép trên vỉa hè bao nhiêu */
 }
 .m3 {
   top: 12%;
@@ -439,8 +450,9 @@ html[data-vao]::after {
   position: absolute;
   left: 0;
   bottom: calc(
-    var(--u) * 23.1
-  ); /* chân nhà nằm trong vỉa hè (hạ thấp hơn trước 3.4u) */
+    var(--song-h) + var(--duong-h) + var(--u) * 2.5 + var(--via-h) -
+      var(--chan-nha)
+  ); /* chân nhà nằm trong vỉa hè; cả phố nằm trên dải sông. (cũ: 23.1u + song-h, đã hạ 8.5u) */
   z-index: 3;
   display: flex;
   align-items: flex-end;
@@ -551,10 +563,12 @@ html[data-vao]::after {
   background: radial-gradient(ellipse, rgba(60, 40, 20, 0.38), transparent 70%);
 }
 .cay {
-  bottom: calc(var(--u) * -5.6);
+  bottom: calc(
+    var(--u) * -3.2
+  ); /* cũ -5.6u: vỉa hè nông hơn nên cây xích lên theo */
 }
 .cay-dam {
-  bottom: calc(var(--u) * -4); /* đứng sát nhà hàng hơn các cây khác */
+  bottom: calc(var(--u) * -2.3); /* đứng sát nhà hàng hơn các cây khác */
 }
 .cay-dam img {
   filter: saturate(1.45) contrast(1.05); /* cây bên phải nhà hàng: đậm màu hơn */
@@ -563,10 +577,10 @@ html[data-vao]::after {
   height: calc(var(--u) * 37);
 }
 .xe {
-  bottom: calc(var(--u) * -3.1);
+  bottom: calc(var(--u) * -1.7); /* cũ -3.1u */
 }
 .xe.gan-le {
-  bottom: calc(var(--u) * -8.4); /* xích ra gần mép lề (kerb) */
+  bottom: calc(var(--u) * -4.4); /* xích ra gần mép lề (kerb) */
 }
 .xe1 img,
 .xe3 img {
@@ -589,8 +603,8 @@ html[data-vao]::after {
   right: 0;
 }
 .via-he {
-  bottom: calc(var(--u) * 11.5);
-  height: calc(var(--u) * 18);
+  bottom: calc(var(--u) * 2.5 + var(--duong-h) + var(--song-h));
+  height: var(--via-h);
   background:
     linear-gradient(
       transparent 34%,
@@ -603,14 +617,14 @@ html[data-vao]::after {
   border-top: 3px solid #efe2bf;
 }
 .le-duong {
-  bottom: calc(var(--u) * 9);
+  bottom: calc(var(--duong-h) + var(--song-h));
   height: calc(var(--u) * 2.5);
   background: linear-gradient(#f1e7cd 0 32%, #a89c84 32% 86%, #5a5246 86%);
   box-shadow: 0 -2px 0 rgba(255, 255, 255, 0.35) inset;
 }
 .duong {
-  bottom: 0;
-  height: calc(var(--u) * 9);
+  bottom: var(--song-h);
+  height: var(--duong-h);
   background:
     url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 60' preserveAspectRatio='none'><g fill='%23fff' fill-opacity='.07'><circle cx='20' cy='10' r='1.6'/><circle cx='150' cy='50' r='1.8'/><circle cx='95' cy='18' r='1.2'/><circle cx='170' cy='22' r='1.4'/></g></svg>")
       0 0 / calc(var(--u) * 36) 100% repeat-x,
@@ -618,7 +632,9 @@ html[data-vao]::after {
 }
 .goi-y {
   position: absolute;
-  bottom: calc(var(--u) * 2.4);
+  bottom: calc(
+    var(--u) * 1.2 + var(--song-h)
+  ); /* nằm giữa lòng đường (đã thu hẹp) */
   left: 50%;
   transform: translateX(-50%);
   z-index: 7;
@@ -651,6 +667,15 @@ html[data-vao]::after {
 }
 .canh .nang {
   z-index: 6;
+  /* tia nắng trang phố mờ dần ở mép trái, phải, trên rồi mới biến mất (đáy để nguyên cho lấp lánh) */
+  -webkit-mask-image:
+    linear-gradient(90deg, transparent 0, #000 14%, #000 86%, transparent 100%),
+    linear-gradient(transparent 0, #000 7%);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(90deg, transparent 0, #000 14%, #000 86%, transparent 100%),
+    linear-gradient(transparent 0, #000 7%);
+  mask-composite: intersect;
 }
 .canh .nang::before {
   display: none; /* trang phố chỉ có 1 vệt nắng, không có quầng sáng */
@@ -1064,6 +1089,151 @@ html[data-vao]::after {
   background-size: calc(var(--u) * 90) 100%;
   background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 900 300' preserveAspectRatio='none'><g fill='%23b9d7c6'><ellipse cx='60' cy='250' rx='90' ry='60'/><ellipse cx='210' cy='235' rx='110' ry='75'/><ellipse cx='400' cy='255' rx='100' ry='55'/><ellipse cx='590' cy='240' rx='120' ry='70'/><ellipse cx='790' cy='250' rx='100' ry='60'/></g><g fill='%23cfc3b2'><polygon points='120,300 120,200 170,170 220,200 220,300'/><polygon points='470,300 470,190 530,160 590,190 590,300'/><polygon points='690,300 690,215 735,190 780,215 780,300'/></g></svg>");
 }
+/* ---- sông + thuyền (góc phố Hội An nhìn ra sông Hoài) ---- */
+.song {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--song-h);
+  z-index: 2;
+  pointer-events: none;
+  overflow: hidden;
+}
+/* kè đá giữa lòng đường và mặt nước */
+.song-ke {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: calc(var(--u) * 2.6);
+  z-index: 2;
+  background:
+    url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 30' preserveAspectRatio='none'><g stroke='%2340382c' stroke-opacity='.35' stroke-width='1.2' vector-effect='non-scaling-stroke' fill='none'><path d='M0 15H120'/><path d='M20 0V15M70 0V15M105 0V15'/><path d='M0 15V30M45 15V30M92 15V30'/></g></svg>")
+      0 0 / calc(var(--u) * 14) 100% repeat-x,
+    linear-gradient(#b9ad94 0 14%, #8d826f 14% 78%, #4c4437 78%);
+}
+.song-nuoc {
+  position: absolute;
+  inset: 0;
+  background:
+    /* ánh vàng của dãy nhà hắt xuống nước */
+    linear-gradient(rgba(246, 190, 70, 0.34), transparent 55%),
+    linear-gradient(#5d9d98, #3f8587 45%, #2c6a70);
+}
+/* sóng lăn tăn trôi chậm; 2 lớp trôi khác tốc độ cho có chiều sâu */
+.song-song {
+  position: absolute;
+  inset: calc(var(--u) * 2.6) 0 0;
+  background-repeat: repeat-x;
+  animation: song-troi 38s linear infinite;
+}
+.song-song.s1 {
+  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 120' preserveAspectRatio='none'><g fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-width='2.2' stroke-opacity='.42' vector-effect='non-scaling-stroke'><path d='M30 22q14-6 28 0t28 0'/><path d='M230 38q16-6 32 0t32 0'/><path d='M120 70q12-5 24 0t24 0'/><path d='M310 92q14-6 28 0t28 0'/><path d='M20 104q10-4 20 0t20 0'/></g></svg>");
+  background-size: calc(var(--u) * 52) 100%;
+}
+.song-song.s2 {
+  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 120' preserveAspectRatio='none'><g fill='none' stroke='%23ffe9b0' stroke-linecap='round' stroke-width='1.8' stroke-opacity='.3' vector-effect='non-scaling-stroke'><path d='M80 14q12-5 24 0t24 0'/><path d='M270 54q14-5 28 0t28 0'/><path d='M170 96q12-5 24 0t24 0'/><path d='M350 24q10-4 20 0t20 0'/></g></svg>");
+  background-size: calc(var(--u) * 37) 100%;
+  animation-duration: 55s;
+  animation-direction: reverse;
+}
+@keyframes song-troi {
+  to {
+    background-position-x: calc(var(--u) * -104);
+  }
+}
+/* nước tối dần về đáy cho mặt sông có chiều sâu */
+.song::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  background: linear-gradient(transparent 55%, rgba(10, 45, 55, 0.35));
+}
+
+/* thuyền nằm giữa sông, phía bên trái màn hình, bồng bềnh theo sóng */
+.thuyen {
+  position: absolute;
+  left: max(9vw, 84px); /* chừa chỗ cho nút loa ở góc trái */
+  bottom: calc(var(--u) * 1.4);
+  width: calc(var(--u) * 46);
+  z-index: 4; /* trên mặt sông (z2), dưới tia nắng (z6) */
+  pointer-events: none;
+  animation: thuyen-troi 11s ease-in-out infinite;
+}
+.thuyen img {
+  display: block;
+  width: 100%;
+  height: auto;
+  transform-origin: 50% 85%;
+  animation: thuyen-nhap 5.2s ease-in-out infinite;
+  filter: drop-shadow(
+    0 calc(var(--u) * 0.5) calc(var(--u) * 0.6) rgba(20, 50, 55, 0.35)
+  );
+}
+/* bóng + vòng sóng loang quanh mạn thuyền */
+.thuyen::before,
+.thuyen::after {
+  content: "";
+  position: absolute;
+  left: 4%;
+  right: 4%;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.thuyen::before {
+  bottom: calc(var(--u) * -1);
+  height: calc(var(--u) * 3);
+  background: radial-gradient(ellipse, rgba(15, 50, 58, 0.45), transparent 70%);
+  filter: blur(2px);
+  z-index: -1;
+}
+.thuyen::after {
+  bottom: calc(var(--u) * -0.4);
+  height: calc(var(--u) * 2.2);
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  border-color: rgba(255, 255, 255, 0.5) transparent transparent transparent;
+  animation: thuyen-vong 5.2s ease-out infinite;
+  z-index: 1;
+}
+@keyframes thuyen-troi {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(calc(var(--u) * 1.8));
+  }
+}
+@keyframes thuyen-nhap {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-0.8deg);
+  }
+  50% {
+    transform: translateY(calc(var(--u) * -0.55)) rotate(0.8deg);
+  }
+}
+@keyframes thuyen-vong {
+  0% {
+    transform: scale(0.94);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.1);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .song-song,
+  .thuyen,
+  .thuyen img,
+  .thuyen::after {
+    animation: none;
+  }
+}
+
 /* ---- âm thanh ---- */
 .nut-am {
   position: fixed;
@@ -1129,6 +1299,15 @@ html[data-vao]::after {
   pointer-events: none;
   mix-blend-mode: screen;
   overflow: hidden;
+  /* ánh nắng mờ dần về 2 mép màn hình, không bị cắt cứng sát góc ảnh */
+  -webkit-mask-image:
+    linear-gradient(90deg, transparent 0, #000 16%, #000 84%, transparent 100%),
+    linear-gradient(transparent 0, #000 8%, #000 88%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(90deg, transparent 0, #000 16%, #000 84%, transparent 100%),
+    linear-gradient(transparent 0, #000 8%, #000 88%, transparent 100%);
+  mask-composite: intersect;
 }
 .nang::before {
   content: "";
@@ -1137,10 +1316,13 @@ html[data-vao]::after {
   left: -10%;
   width: 60%;
   height: 70%;
+  /* closest-side: quầng sáng tắt hẳn ngay trong khung của nó (trước đây bán kính vượt khung
+     nên bị cắt thành 1 đường ngang cứng ở đáy khung, lộ rõ nhất ở góc trái) */
   background: radial-gradient(
-    circle,
+    ellipse closest-side,
     rgba(255, 225, 150, 0.5),
-    transparent 65%
+    rgba(255, 225, 150, 0.22) 55%,
+    transparent
   );
   animation: am 8s ease-in-out infinite alternate;
 }
@@ -1150,13 +1332,25 @@ html[data-vao]::after {
   left: var(--l);
   width: var(--w);
   height: 150%;
+  /* mép 2 bên của tia mờ dần bằng gradient ngang (không dùng filter blur trên lớp xoay
+     quá lớn, vì nó bị cắt cứng thành 1 đường ngang/xiên); đầu tia mờ dần bằng mask dọc */
   background: linear-gradient(
-    rgba(255, 226, 150, 0.5),
-    rgba(255, 226, 150, 0) 85%
+    90deg,
+    rgba(255, 226, 150, 0),
+    rgba(255, 226, 150, 0.22) 15%,
+    rgba(255, 226, 150, 0.5) 42%,
+    rgba(255, 226, 150, 0.5) 58%,
+    rgba(255, 226, 150, 0.22) 85%,
+    rgba(255, 226, 150, 0)
   );
+  -webkit-mask-image: linear-gradient(
+    #000 0,
+    rgba(0, 0, 0, 0.75) 30%,
+    transparent 85%
+  );
+  mask-image: linear-gradient(#000 0, rgba(0, 0, 0, 0.75) 30%, transparent 85%);
   transform-origin: top;
   transform: rotate(-24deg);
-  filter: blur(14px);
   animation: tia 7s ease-in-out infinite alternate;
   animation-delay: var(--dl);
 }
@@ -2181,7 +2375,6 @@ html[data-vao]::before {
     transform: scaleX(-1) translateX(6px);
   }
 }
-
 
 /* ảnh món ăn trong ô hình (.bieu) */
 .bieu {
