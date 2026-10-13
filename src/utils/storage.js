@@ -1,6 +1,7 @@
 // Lưu ảnh món ăn lên Supabase Storage (bucket "dish-images"), DB chỉ giữ URL.
 const crypto = require("crypto");
 const { createClient } = require("@supabase/supabase-js");
+const sharp = require("sharp");
 
 const BUCKET = "dish-images";
 const EXT = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
@@ -18,10 +19,25 @@ function supabase() {
 }
 
 async function uploadImage(file) {
-  const path = `${crypto.randomUUID()}.${EXT[file.mimetype]}`;
+  // thu nhỏ về tối đa 800px, đổi sang WEBP (ảnh điện thoại 3MB thường còn ~50-100KB), tự xoay đúng chiều
+  const buffer = await sharp(file.buffer)
+    .rotate()
+    .resize({
+      width: 800,
+      height: 800,
+      fit: "inside",
+      withoutEnlargement: true,
+    })
+    .webp({ quality: 80 })
+    .toBuffer();
+  const path = `${crypto.randomUUID()}.webp`;
   const { error } = await supabase()
     .storage.from(BUCKET)
-    .upload(path, file.buffer, { contentType: file.mimetype });
+    // tên file là UUID (không bao giờ đổi nội dung) nên cho trình duyệt giữ 1 năm
+    .upload(path, buffer, {
+      contentType: "image/webp",
+      cacheControl: "31536000",
+    });
   if (error) throw error;
   const { data } = supabase().storage.from(BUCKET).getPublicUrl(path);
   return { path, url: data.publicUrl };

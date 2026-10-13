@@ -1,5 +1,6 @@
 const path = require("path");
 const express = require("express");
+const compression = require("compression");
 const cookieParser = require("cookie-parser");
 const methodOverride = require("method-override");
 const { attachRole, requireAdmin } = require("./middleware/auth");
@@ -7,13 +8,17 @@ const { formatPrice, dishIcon, dishThumb } = require("./utils/format");
 
 const app = express();
 
+// nén HTML/CSS/JS trước khi gửi về trình duyệt (giảm ~70% dung lượng)
+app.use(compression());
+
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
 const PUBLIC = path.join(__dirname, "..", "public");
 // ảnh ít đổi -> cho trình duyệt giữ 7 ngày (khỏi hỏi lại server mỗi lần chuyển cảnh)
 app.use("/img", express.static(path.join(PUBLIC, "img"), { maxAge: "7d" }));
-app.use(express.static(PUBLIC));
+// CSS/JS giữ trong cache 1 ngày (đang sửa giao diện liên tục thì đổi "1d" thành "1h" hoặc bỏ maxAge)
+app.use(express.static(PUBLIC, { maxAge: "1d" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 // <form method="POST" action="...?_method=PATCH|DELETE"> -> req.method = PATCH|DELETE
