@@ -132,7 +132,7 @@ Object.values(resources).forEach((r) => {
     }),
   );
 
-    const mw = r.hasImage ? [nhanAnh] : [];
+  const mw = [nhanAnh];
 
   router.post(
     base,
