@@ -1,6 +1,6 @@
 // ---- Âm thanh: tự tổng hợp bằng WebAudio (không cần file mp3), bật sau lần bấm đầu tiên ----
 // Không còn "nền rè như tivi": chỉ có hiệu ứng ngắn khi thao tác + vài tiếng đời sống rời rạc
-// theo từng trang (data-am = pho | khach | bep | quan).
+// chỉ ở trang phố. Còn lại chỉ có tiếng chuyển cảnh (vut) và tiếng xoay bàn đổi món (xoay).
 const Am = (() => {
   const AC = window.AudioContext || window.webkitAudioContext;
   const nutAm = document.querySelector("#nut-am");
@@ -88,17 +88,8 @@ const Am = (() => {
   }
 
   // ---------- hiệu ứng khi thao tác ----------
+  // Chỉ giữ 2 hiệu ứng: xoay (đổi món ở bàn ăn) và vut (chuyển cảnh). Các tiếng bấm nút/mở hộp thoại/gọi món đã bỏ.
   const SFX = {
-    // bấm nút: tiếng "cộc" gỗ nhẹ
-    nhan: () => {
-      tieng(540, 0.07, { type: "triangle", v: 0.12, to: 250 });
-      rat(0.03, { loc: "highpass", f: 2500, v: 0.04 });
-    },
-    // mở hộp thoại: hai nốt đi lên
-    mo: () => {
-      tieng(392, 0.14, { type: "triangle", v: 0.08 });
-      tieng(587, 0.2, { type: "triangle", v: 0.08, at: 0.07 });
-    },
     // xoay bàn: gỗ lăn + vài tiếng đĩa sứ chạm nhau
     xoay: () => {
       rat(0.6, { loc: "lowpass", f: 280, to: 650, q: 0.7, v: 0.3, att: 0.15 });
@@ -106,16 +97,6 @@ const Am = (() => {
       chuong(2600, 0.22, 0.04, 0.1);
       chuong(3300, 0.18, 0.03, 0.26);
       chuong(2100, 0.24, 0.03, 0.42);
-    },
-    // chuông gọi món "ting-ting"
-    ding: () => {
-      chuong(1568, 1.3, 0.1);
-      chuong(1568, 1.5, 0.1, 0.2);
-    },
-    // thêm vào hàng chờ: "bốp" nhỏ đi lên
-    them: () => {
-      tieng(500, 0.1, { v: 0.1, to: 760 });
-      tieng(900, 0.14, { v: 0.05, at: 0.06 });
     },
     // chuyển cảnh: gió lướt + lá xào xạc
     vut: () => {
@@ -187,45 +168,14 @@ const Am = (() => {
       if (R() < 0.4)
         setTimeout(() => bat && ctx.state === "running" && DOI.coi(), d * 450);
     },
-    chen: () => {
-      chuong(giua(2200, 3000), 0.28, 0.04);
-      if (R() < 0.5) chuong(giua(2800, 3600), 0.22, 0.03, 0.17);
-    },
-    // chảo xèo xèo
-    xeo: () => {
-      rat(1.3, { loc: "highpass", f: 4500, v: 0.05, att: 0.25 });
-      for (let i = 0; i < 10; i++)
-        rat(0.015, { loc: "highpass", f: 3000, v: 0.07, at: giua(0, 1.2) });
-    },
-    // dao thớt "cộc cộc cộc"
-    thai: () => {
-      let at = 0;
-      for (
-        let i = 0, n = 4 + Math.floor(R() * 4);
-        i < n;
-        i++, at += giua(0.15, 0.22)
-      ) {
-        tieng(190, 0.07, { type: "triangle", v: 0.13, to: 90, at });
-        rat(0.03, { loc: "bandpass", f: 1300, v: 0.06, at });
-      }
-    },
   };
+  // nền chỉ có ở trang phố (home); các trang khác không có tiếng nền
   const LICH = {
     pho: [
       [DOI.chim, 5, 11],
       [DOI.xeMay, 9, 18],
       [DOI.xeDap, 20, 35],
     ],
-    khach: [
-      [DOI.chen, 4, 9],
-      [DOI.xeo, 12, 22],
-    ],
-    bep: [
-      [DOI.thai, 5, 10],
-      [DOI.xeo, 8, 16],
-      [DOI.chen, 10, 20],
-    ],
-    quan: [[DOI.chen, 14, 25]],
   };
   function lap(fn, a, b) {
     const chay = () =>
@@ -252,11 +202,11 @@ const Am = (() => {
       buf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
       const x = buf.getChannelData(0);
       for (let i = 0; i < x.length; i++) x[i] = R() * 2 - 1;
-      (LICH[kieu] || LICH.quan).forEach(([fn, a, b]) => lap(fn, a, b));
+      (LICH[kieu] || []).forEach(([fn, a, b]) => lap(fn, a, b));
       // một tiếng chào nhỏ ngay khi vào trang để biết âm thanh đã bật
       setTimeout(
         () =>
-          bat && ctx.state === "running" && (LICH[kieu] || LICH.quan)[0][0](),
+          bat && ctx.state === "running" && LICH[kieu] && LICH[kieu][0][0](),
         700,
       );
     }
@@ -267,14 +217,7 @@ const Am = (() => {
     if (bat && ctx && ctx.state !== "closed" && SFX[t]) SFX[t]();
   };
 
-  addEventListener("pointerdown", (e) => {
-    khoiDong();
-    if (
-      e.target.closest &&
-      e.target.closest(".nut:not(.mui-ten):not(.nut-am),.o,.vai")
-    )
-      phat("nhan");
-  });
+  addEventListener("pointerdown", khoiDong); // chỉ để mở âm thanh sau lần bấm đầu tiên (không phát tiếng bấm nút)
   addEventListener("keydown", khoiDong);
   if (nutAm)
     nutAm.onclick = () => {

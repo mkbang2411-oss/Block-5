@@ -36,7 +36,7 @@ const dishes = {
   label: (r) => r.name,
   // ô hiển thị trên lưới ở trang quản trị
   tile: (r) => ({
-    icon: dishThumb(r),
+    icon: dishThumb(r, true), // trang quản trị chỉ 9 ô/trang -> tải ảnh ngay (không lazy) để LCP nhanh
     title: r.name,
     sub: formatPrice(r.price) + (r.available ? "" : " · Hết món"),
   }),

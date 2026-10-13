@@ -15,8 +15,8 @@ app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
 const PUBLIC = path.join(__dirname, "..", "public");
-// ảnh ít đổi -> cho trình duyệt giữ 7 ngày (khỏi hỏi lại server mỗi lần chuyển cảnh)
-app.use("/img", express.static(path.join(PUBLIC, "img"), { maxAge: "7d" }));
+// ảnh ít đổi -> cho trình duyệt giữ 30 ngày (đổi ảnh thì nên đổi tên file) (khỏi hỏi lại server mỗi lần chuyển cảnh)
+app.use("/img", express.static(path.join(PUBLIC, "img"), { maxAge: "30d" }));
 // CSS/JS giữ trong cache 1 ngày (đang sửa giao diện liên tục thì đổi "1d" thành "1h" hoặc bỏ maxAge)
 app.use(express.static(PUBLIC, { maxAge: "1d" }));
 app.use(express.urlencoded({ extended: true }));

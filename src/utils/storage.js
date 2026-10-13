@@ -2,6 +2,7 @@
 const crypto = require("crypto");
 const { createClient } = require("@supabase/supabase-js");
 const sharp = require("sharp");
+const WebSocket = require("ws");
 
 const BUCKET = "dish-images";
 const EXT = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
@@ -13,6 +14,9 @@ function supabase() {
     client = createClient(
       process.env.SUPABASE_URL,
       process.env.SUPABASE_SERVICE_ROLE_KEY,
+      // Node 20 không có WebSocket sẵn nên supabase-js báo lỗi "native WebSocket not found";
+      // đưa gói "ws" vào để chạy được trên cả Node 20 lẫn 22+ (ta chỉ dùng Storage, không dùng realtime)
+      { realtime: { transport: WebSocket } },
     );
   }
   return client;
