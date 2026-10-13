@@ -91,20 +91,7 @@
   form.addEventListener("submit", (e) => {
     e.preventDefault();
     hopVai.hidden = true;
-    const vai = new FormData(form).get("role");
-    // Gửi POST /login NGAY (chạy song song với hiệu ứng) -> khi cành phủ kín thì cookie đã sẵn,
-    // chỉ việc đi thẳng tới trang đích (giống src/routes/auth.js), đỡ một vòng POST + redirect.
-    const gui = fetch(form.action, {
-      method: "POST",
-      body: new URLSearchParams(new FormData(form)),
-      credentials: "same-origin",
-      redirect: "manual",
-    }).catch(() => null);
-    chuyenCanh(async () => {
-      const r = await gui;
-      if (r && (r.type === "opaqueredirect" || r.ok))
-        location.href = vai === "admin" ? "/admin/dishes" : "/khach";
-      else form.submit(); // lỗi mạng / server -> quay về cách gửi form thường
-    });
+    // chạy hiệu ứng chuyển cảnh rồi gửi form POST /login thật (server đặt cookie + redirect 303)
+    chuyenCanh(() => form.submit());
   });
 })();

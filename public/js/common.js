@@ -268,18 +268,9 @@ document.addEventListener("submit", (e) => {
   if (!f.matches || !f.matches('form[action="/logout"]') || e.defaultPrevented)
     return;
   e.preventDefault();
-  if (!document.body.classList.contains("di-xuong")) {
-    // POST /logout chạy song song với hiệu ứng; xong thì về thẳng phố (GET / cũng tự xóa cookie)
-    const gui = fetch(f.action, {
-      method: "POST",
-      credentials: "same-origin",
-      redirect: "manual",
-    }).catch(() => null);
-    chuyenCanh(async () => {
-      await gui;
-      location.href = "/";
-    }, "xuong");
-  }
+  if (!document.body.classList.contains("di-xuong"))
+    // hiệu ứng chạy xong mới gửi form POST /logout thật (server xóa cookie + redirect 303 về phố)
+    chuyenCanh(() => f.submit(), "xuong");
 });
 
 if (document.body.hasAttribute("data-la")) setInterval(() => thaLa(1), 900);

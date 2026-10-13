@@ -2036,22 +2036,6 @@ html[data-dia] .man {
   font-weight: 600;
   overflow-wrap: anywhere;
 }
-.bep .ct-sua {
-  display: none;
-}
-.bep .ct.dang-sua .ct-sua {
-  display: block;
-}
-.bep .ct.dang-sua .ct-xem {
-  display: none;
-}
-.bep .ct-xoa {
-  margin-top: 14px;
-}
-.bep .ct-xoa[hidden],
-.bep .ct-thao-tac[hidden] {
-  display: none;
-}
 @media (max-width: 900px) {
   .bep .chia {
     --pw: min(420px, 92vw);

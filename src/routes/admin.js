@@ -1,9 +1,11 @@
 // ===== TRANG QUẢN TRỊ: CRUD theo bảng cho dishes, chefs, ingredients =====
 //   GET    /admin/:resource             danh sách + khung chi tiết bên phải (?page=2&sel=ID mở sẵn món ID)
 //   GET    /admin/:resource/new         form thêm
+//   GET    /admin/:resource/:id/edit    form sửa (200 | 404)
+//   GET    /admin/:resource/:id/delete  trang xác nhận xóa (200 | 404)
 //   POST   /admin/:resource             thêm            -> 303
-//   PATCH  /admin/:resource/:id         sửa (form nằm trong khung chi tiết) -> 303
-//   DELETE /admin/:resource/:id         xóa (xác nhận ngay trong khung chi tiết) -> 303
+//   PATCH  /admin/:resource/:id         sửa             -> 303 (lỗi: 400 + form sửa)
+//   DELETE /admin/:resource/:id         xóa sau khi xác nhận -> 303 (bị chặn: 409)
 // Form HTML chỉ có GET/POST nên PATCH/DELETE đi qua method-override (?_method=...),
 // hoàn toàn phía server, không dùng fetch/AJAX/JS client.
 const express = require("express");
@@ -69,13 +71,14 @@ async function renderForm(
     .render("admin/form", { r, record, values, errors, options });
 }
 
-// Vẽ trang danh sách. sel = id đang mở ở khung chi tiết; sua = { values, errors } khi form sửa trả lỗi.
-async function renderList(
-  req,
-  res,
-  r,
-  { sel = null, sua = null, status = 200, loi = null } = {},
-) {
+// Trang xác nhận xóa (phía server). loi = lý do không được xóa (nếu có).
+async function renderConfirm(res, r, record, { status = 200 } = {}) {
+  const loi = r.blockDelete ? await r.blockDelete(record) : null;
+  res.status(status).render("admin/xoa", { r, record, loi });
+}
+
+// Vẽ trang danh sách. sel = id đang mở ở khung chi tiết.
+async function renderList(req, res, r, { sel = null, status = 200 } = {}) {
   const q = layQ(req);
   // tìm theo tên (không phân biệt hoa/thường và dấu), dùng chung với trang khách
   const all = (
@@ -89,10 +92,6 @@ async function renderList(
     totalPages,
   );
   const rows = all.slice((page - 1) * PER_PAGE, page * PER_PAGE);
-  const options = await r.loadOptions();
-  const chan = {}; // id -> lý do không được xóa
-  for (const row of rows)
-    chan[row.id] = r.blockDelete ? await r.blockDelete(row) : null;
   const selId = sel || parseId(req.query.sel);
   res.status(status).render("admin/list", {
     r,
@@ -101,18 +100,12 @@ async function renderList(
     page,
     totalPages,
     total: all.length,
-    options,
-    chan,
     sel: rows.some((x) => x.id === selId) ? selId : null,
-    sua,
-    loi,
   });
 }
 
 Object.values(resources).forEach((r) => {
   const base = `/${r.key}`;
-  const trang = (req) =>
-    parseInt(req.query.page, 10) > 1 ? parseInt(req.query.page, 10) : 1;
 
   router.get(
     base,
@@ -132,11 +125,27 @@ Object.values(resources).forEach((r) => {
     }),
   );
 
-  const mw = [nhanAnh];
+  router.get(
+    `${base}/:id/edit`,
+    asyncHandler(async (req, res, next) => {
+      const record = await findRecord(r, req.params.id);
+      if (!record) return next();
+      await renderForm(res, r, { record, values: r.toValues(record) });
+    }),
+  );
+
+  router.get(
+    `${base}/:id/delete`,
+    asyncHandler(async (req, res, next) => {
+      const record = await findRecord(r, req.params.id);
+      if (!record) return next();
+      await renderConfirm(res, r, record);
+    }),
+  );
 
   router.post(
     base,
-    ...mw,
+    nhanAnh,
     asyncHandler(async (req, res) => {
       const { errors, values, data } = await r.parse(req.body, null);
       if (req.loiAnh) errors.image = req.loiAnh;
@@ -156,18 +165,14 @@ Object.values(resources).forEach((r) => {
 
   router.patch(
     `${base}/:id`,
-    ...mw,
+    nhanAnh,
     asyncHandler(async (req, res, next) => {
       const record = await findRecord(r, req.params.id);
       if (!record) return next();
       const { errors, values, data } = await r.parse(req.body, record);
       if (req.loiAnh) errors.image = req.loiAnh;
       if (Object.keys(errors).length) {
-        return renderList(req, res, r, {
-          sel: record.id,
-          sua: { values, errors },
-          status: 400,
-        });
+        return renderForm(res, r, { record, values, errors, status: 400 });
       }
       const anhCu = record.imagePath;
       if (req.file) {
@@ -178,10 +183,7 @@ Object.values(resources).forEach((r) => {
       await record.update(data);
       if (req.file) await removeImage(anhCu); // lưu DB xong mới xóa ảnh cũ
       if (r.afterSave) await r.afterSave(record, data);
-      res.redirect(
-        303,
-        `/admin${base}?page=${trang(req)}&sel=${record.id}&success=updated`,
-      );
+      res.redirect(303, `/admin${base}?sel=${record.id}&success=updated`);
     }),
   );
 
@@ -191,16 +193,10 @@ Object.values(resources).forEach((r) => {
       const record = await findRecord(r, req.params.id);
       if (!record) return next();
       const blockReason = r.blockDelete ? await r.blockDelete(record) : null;
-      if (blockReason) {
-        return renderList(req, res, r, {
-          sel: record.id,
-          status: 409,
-          loi: blockReason,
-        });
-      }
+      if (blockReason) return renderConfirm(res, r, record, { status: 409 });
       await record.destroy();
       if (r.hasImage) await removeImage(record.imagePath);
-      res.redirect(303, `/admin${base}?page=${trang(req)}&success=deleted`);
+      res.redirect(303, `/admin${base}?success=deleted`);
     }),
   );
 });

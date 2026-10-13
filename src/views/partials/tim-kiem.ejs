@@ -1,4 +1,4 @@
-<%# Ô tìm kiếm dùng chung (khách + đầu bếp). Có JS: gõ tới đâu lọc tới đó (public/js/tim-kiem.js). Không JS: bấm Tìm như form thường. %>
+<%# Ô tìm kiếm dùng chung (khách + đầu bếp). Form GET thường: bấm Tìm để server lọc (không dùng AJAX). %>
 <form method="get" action="<%= action %>" class="tim" data-tim>
   <input type="text" name="q" value="<%= q %>" placeholder="<%= placeholder %>" autocomplete="off">
   <button class="nut">Tìm</button>

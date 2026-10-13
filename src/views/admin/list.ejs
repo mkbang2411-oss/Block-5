@@ -31,16 +31,12 @@
       </nav>
     </div>
 
-    <%# Khung chi tiết: mỗi món một khối, JS chỉ bật/tắt; server vẫn dựng sẵn khối đang chọn (kể cả khi form sửa báo lỗi) %>
+    <%# Khung chi tiết: mỗi mục một khối (chỉ xem), JS chỉ bật/tắt; Sửa/Xóa là link sang trang riêng %>
     <aside class="chi-tiet" aria-label="Chi tiết">
       <% rows.forEach(row => {
-        const dangSua = sua && row.id === sel;
-        const values = dangSua ? sua.values : r.toValues(row);
-        const errors = dangSua ? sua.errors : {};
         const t = r.tile(row);
-        const lyDo = chan[row.id] || (row.id === sel && loi) || null;
       %>
-      <section class="ct hop<%= dangSua ? ' dang-sua' : '' %>" data-id="<%= row.id %>" <%= row.id === sel ? '' : 'hidden' %>>
+      <section class="ct hop" data-id="<%= row.id %>" <%= row.id === sel ? '' : 'hidden' %>>
         <button type="button" class="dong-ct" data-a="dong" aria-label="Đóng">×</button>
 
         <div class="ct-xem">
@@ -48,38 +44,15 @@
           <dl class="ct-ds">
             <% r.columns.slice(1).forEach(c => { %><dt><%= c.label %></dt><dd><%= c.value(row) %></dd><% }) %>
           </dl>
-          <% if (row.id === sel && loi) { %><div class="bao-loi"><%= loi %></div><% } %>
-          <div class="ct-xoa" hidden>
-            <% if (lyDo) { %>
-              <div class="bao-loi"><%= lyDo %></div>
-              <div class="nut-hang"><button type="button" class="nut nut-phu" data-a="khong-xoa">Đóng</button></div>
-            <% } else { %>
-              <p>Xóa <%= r.singular %> <b><%= r.label(row) %></b>? Không thể hoàn tác.</p>
-              <form method="post" action="/admin/<%= r.key %>/<%= row.id %>?_method=DELETE&page=<%= page %>" class="nut-hang">
-                <button type="button" class="nut nut-phu" data-a="khong-xoa">Không xóa</button>
-                <button class="nut">Xóa luôn</button>
-              </form>
-            <% } %>
-          </div>
           <div class="nut-hang ct-thao-tac">
-            <button type="button" class="nut nut-phu" data-a="xoa">Xóa</button>
-            <button type="button" class="nut" data-a="sua">Sửa</button>
+            <a class="nut nut-phu" href="/admin/<%= r.key %>/<%= row.id %>/delete">Xóa</a>
+            <a class="nut" href="/admin/<%= r.key %>/<%= row.id %>/edit">Sửa</a>
           </div>
         </div>
 
-        <%# novalidate: để server kiểm tra và trả 400 %>
-        <form method="post" enctype="multipart/form-data" novalidate class="ct-sua" action="/admin/<%= r.key %>/<%= row.id %>?_method=PATCH&page=<%= page %>">
-          <h2>Sửa <%= r.singular %></h2>
-          <% if (Object.keys(errors).length) { %><div class="bao-loi">Dữ liệu chưa hợp lệ, vui lòng kiểm tra lại.</div><% } %>
-          <%- include('_truong', { r, values, errors, options, idp: 'e' + row.id + '-' }) %>
-          <div class="nut-hang">
-            <button type="button" class="nut nut-phu" data-a="huy">Hủy</button>
-            <button class="nut">Lưu thay đổi</button>
-          </div>
-        </form>
       </section>
       <% }) %>
     </aside>
   </div>
 </main>
-<%- include('../partials/foot', { scripts: ['/js/admin.js', '/js/tim-kiem.js'] }) %>
+<%- include('../partials/foot', { scripts: ['/js/admin.js'] }) %>
