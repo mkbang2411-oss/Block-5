@@ -35,8 +35,9 @@ const dishes = {
   order: [["id", "ASC"]],
   label: (r) => r.name,
   // ô hiển thị trên lưới ở trang quản trị
-  tile: (r) => ({
-    icon: dishThumb(r, true), // trang quản trị chỉ 9 ô/trang -> tải ảnh ngay (không lazy) để LCP nhanh
+  // i = vị trí ô trên lưới (khung chi tiết ẩn không truyền i -> ảnh lazy)
+  tile: (r, i = -1) => ({
+    icon: dishThumb(r, i >= 0, i >= 0 && i < 3), // 3 ô đầu = ảnh LCP -> fetchpriority=high
     title: r.name,
     sub: formatPrice(r.price) + (r.available ? "" : " · Hết món"),
   }),

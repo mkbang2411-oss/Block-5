@@ -12,14 +12,21 @@ router.get(
   "/dishes",
   asyncHandler(async (req, res) => {
     const q = layQ(req);
-    const options = {
-      include: [{ model: Chef, as: "chef" }],
-      order: [["name", "ASC"]],
-    };
     // tìm không phân biệt hoa/thường và dấu tiếng Việt (dùng chung với trang đầu bếp)
-    const all = (await Dish.findAll(options)).filter((d) => khop(d.name, q));
+    // Query 1 (nhẹ): chỉ id + name để lọc và phân trang
+    const slim = (
+      await Dish.findAll({ attributes: ["id", "name"], order: [["name", "ASC"]] })
+    ).filter((d) => khop(d.name, q));
     // phân trang phía server: /dishes?q=...&page=2 (giống trang quản trị)
-    const { items: dishes, page, totalPages } = paginate(all, req.query.page);
+    const { items: pageItems, page, totalPages } = paginate(slim, req.query.page);
+    // Query 2: chỉ nạp đầy đủ các món của trang hiện tại (kèm đầu bếp)
+    const dishes = pageItems.length
+      ? await Dish.findAll({
+          where: { id: pageItems.map((d) => d.id) },
+          include: [{ model: Chef, as: "chef" }],
+          order: [["name", "ASC"]],
+        })
+      : [];
     // ?sel=ID mở sẵn khung chi tiết (khi không có JS); chỉ nhận món nằm trong trang hiện tại
     const selId = parseId(req.query.sel);
     const sel = dishes.some((d) => d.id === selId) ? selId : null;

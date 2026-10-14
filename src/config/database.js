@@ -9,10 +9,17 @@ if (!url) {
 const isPostgres = /^postgres(ql)?:/.test(url);
 
 // Supabase bắt buộc SSL
-const options = { logging: false };
+const options = {
+  logging: false,
+  // giữ sẵn 1 kết nối (mặc định Sequelize đóng kết nối rảnh sau 10s -> request kế tiếp phải bắt tay SSL lại, tốn ~0.3-1s)
+  pool: { max: 10, min: 1, idle: 60000, acquire: 30000 },
+};
 if (isPostgres) {
   options.dialect = 'postgres';
-  options.dialectOptions = { ssl: { require: true, rejectUnauthorized: false } };
+  options.dialectOptions = {
+    ssl: { require: true, rejectUnauthorized: false },
+    keepAlive: true,
+  };
 }
 
 module.exports = new Sequelize(url, options);

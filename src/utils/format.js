@@ -45,10 +45,15 @@ const escHtml = (v) =>
         c
       ],
   );
+// URL thumbnail: abc.webp -> abc_s.webp (xem utils/storage.js)
+const thumbUrl = (url) => String(url).replace(/\.webp$/, "_s.webp");
+
 // eager = ảnh nằm ngay màn hình đầu (tải liền, giúp LCP nhanh); còn lại lazy
-const dishThumb = (dish, eager = false) =>
+// high  = ảnh LCP: báo trình duyệt tải trước (fetchpriority="high")
+// Ô hình nhỏ nên dùng thumbnail; ảnh cũ chưa có thumbnail thì tự quay về ảnh gốc (onerror, chỉ đổi src, không gửi dữ liệu)
+const dishThumb = (dish, eager = false, high = false) =>
   dish.imageUrl
-    ? `<img class="anh-bieu" src="${escHtml(dish.imageUrl)}" alt="${escHtml(dish.name)}" loading="${eager ? "eager" : "lazy"}" decoding="async">`
+    ? `<img class="anh-bieu" src="${escHtml(thumbUrl(dish.imageUrl))}" alt="${escHtml(dish.name)}" width="88" height="88" loading="${eager ? "eager" : "lazy"}"${high ? ' fetchpriority="high"' : ""} decoding="async" onerror="this.onerror=null;this.src='${escHtml(dish.imageUrl)}'">`
     : dishIcon(dish);
 
-module.exports = { formatPrice, parseId, asyncHandler, dishIcon, dishThumb };
+module.exports = { thumbUrl, formatPrice, parseId, asyncHandler, dishIcon, dishThumb };

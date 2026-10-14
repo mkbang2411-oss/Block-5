@@ -81,11 +81,21 @@ async function renderConfirm(res, r, record, { status = 200 } = {}) {
 async function renderList(req, res, r, { sel = null, status = 200 } = {}) {
   const q = layQ(req);
   // tìm theo tên (không phân biệt hoa/thường và dấu), dùng chung với trang khách
-  const all = (
-    await r.model.findAll({ include: r.include, order: r.order })
+  // Query 1 (nhẹ, không JOIN): chỉ lấy id + name để lọc/đếm/phân trang
+  const slim = (
+    await r.model.findAll({ attributes: ["id", "name"], order: r.order })
   ).filter((x) => khop(r.label(x), q));
   // phân trang phía server: /admin/dishes?page=2
-  const { items: rows, page, totalPages } = paginate(all, req.query.page);
+  const { items: pageItems, page, totalPages } = paginate(slim, req.query.page);
+  // Query 2: chỉ nạp đủ dữ liệu + quan hệ cho các bản ghi của TRANG HIỆN TẠI (tối đa 9)
+  const rows = pageItems.length
+    ? await r.model.findAll({
+        where: { id: pageItems.map((x) => x.id) },
+        include: r.include,
+        order: r.order,
+      })
+    : [];
+  const all = slim;
   const selId = sel || parseId(req.query.sel);
   res.status(status).render("admin/list", {
     r,

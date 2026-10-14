@@ -11,6 +11,9 @@ const app = express();
 // nén HTML/CSS/JS trước khi gửi về trình duyệt (giảm ~70% dung lượng)
 app.use(compression());
 
+// endpoint nhẹ, không đụng DB: dùng cho dịch vụ ping (UptimeRobot...) giữ Render free không "ngủ"
+app.get("/healthz", (req, res) => res.type("text").send("ok"));
+
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
@@ -30,7 +33,13 @@ app.use(cookieParser());
 // <form method="POST" action="...?_method=PATCH|DELETE"> -> req.method = PATCH|DELETE
 app.use(methodOverride("_method"));
 app.use(attachRole);
+// origin của Supabase Storage (không phải bí mật): để <link rel="preconnect"> mở sẵn kết nối tới nơi chứa ảnh
+let imgOrigin = "";
+try {
+  if (process.env.SUPABASE_URL) imgOrigin = new URL(process.env.SUPABASE_URL).origin;
+} catch (e) {}
 app.use((req, res, next) => {
+  res.locals.imgOrigin = imgOrigin;
   res.locals.formatPrice = formatPrice;
   res.locals.dishThumb = dishThumb;
   next();

@@ -16,7 +16,7 @@
       <div class="luoi">
         <% dishes.forEach((d, i) => { %>
           <a class="o<%= d.id === sel ? ' chon' : '' %>" data-id="<%= d.id %>" href="<%= lk({ page, sel: d.id }) %>" title="Bấm để xem chi tiết">
-            <span class="bieu"><%- dishThumb(d, i < 6) %></span>
+            <span class="bieu"><%- dishThumb(d, i < 6, i < 3) %></span>
             <b><%= d.name %></b>
             <small><%= formatPrice(d.price) %> · <%= d.category %></small>
             <small><%= d.chef ? 'Đầu bếp ' + d.chef.name : '' %></small>
